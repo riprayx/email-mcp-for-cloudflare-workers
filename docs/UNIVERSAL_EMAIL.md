@@ -21,6 +21,8 @@ Any other standards-compliant mailbox remains supported by supplying custom IMAP
 
 `email_add_account` is registered only in `MCP_PERMISSION_MODE=full`. The default `mail` mode intentionally keeps account administration out of the MCP tool surface; use the Web management UI for account setup when staying on the default mode.
 
+Prefer the Web management UI for real mailbox credentials. Credentials entered through `email_add_account` pass through the MCP client/model workflow before the Worker encrypts and stores them; the Web UI submits them directly to the Worker instead.
+
 For a known provider, `email_add_account` only needs the account identity and credential. Server settings are inferred from the email domain:
 
 ```json
@@ -40,6 +42,12 @@ Explicit `imapHost`, `imapPort`, `imapSecure`, `smtpHost`, `smtpPort`, and `smtp
 Set `smtpEnabled: false` for a read-only mailbox.
 
 If the authentication username differs from the mailbox address, set `username`. Existing accounts without `username` continue to authenticate with their email address.
+
+## NetEase IMAP compatibility
+
+NetEase IMAP servers require RFC 2971 client identification on affected mailboxes before selecting folders. The Worker automatically sends an `ID` command after authentication for the built-in NetEase IMAP hosts.
+
+This behavior is based on the actual IMAP host, not the stored provider name. A NetEase account entered through the Web UI as Custom therefore receives the same compatibility handshake when its IMAP host is `imap.163.com`, `imap.126.com`, `imap.yeah.net`, or one of the supported NetEase VIP/188 hosts.
 
 ## Credentials
 
