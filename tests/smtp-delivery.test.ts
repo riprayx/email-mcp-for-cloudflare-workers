@@ -4,7 +4,7 @@ import {
 	SmtpDeliveryUnknownError,
 	SmtpResponseError,
 	classifySmtpDataFailure,
-} from "../src/mail/smtp-errors";
+} from "../src/mail/smtp-errors.ts";
 
 test("explicit SMTP rejection remains a definite response failure", () => {
 	const rejection = new SmtpResponseError(550, "mail rejected");
