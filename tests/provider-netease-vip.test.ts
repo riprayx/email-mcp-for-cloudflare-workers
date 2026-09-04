@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { detectProvider, requiresImapClientId } from "../src/mail/providers";
+import { detectProvider, requiresImapClientId } from "../src/mail/providers.ts";
 
 test("detects NetEase VIP mail domains", () => {
 	assert.equal(detectProvider("user@vip.163.com")?.imap.host, "imap.vip.163.com");
