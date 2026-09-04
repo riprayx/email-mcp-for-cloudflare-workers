@@ -10,10 +10,27 @@ test("detects QQ mail from domain", () => {
 	assert.equal(detectProvider("user@qq.com")?.id, "qq-mail");
 });
 
+test("detects Foxmail as QQ Mail", () => {
+	assert.equal(detectProvider("user@foxmail.com")?.id, "qq-mail");
+});
+
 test("explicit provider preset returns IMAP and SMTP defaults", () => {
 	const preset = resolveProviderPreset("netease-163");
 	assert.equal(preset?.imap.host, "imap.163.com");
 	assert.equal(preset?.smtp?.host, "smtp.163.com");
+});
+
+test("includes Fastmail preset", () => {
+	assert.equal(resolveProviderPreset("fastmail")?.imap.host, "imap.fastmail.com");
+	assert.equal(resolveProviderPreset("fastmail")?.smtp?.host, "smtp.fastmail.com");
+});
+
+test("includes Yahoo preset", () => {
+	assert.equal(resolveProviderPreset("yahoo")?.imap.host, "imap.mail.yahoo.com");
+});
+
+test("includes Zoho preset", () => {
+	assert.equal(resolveProviderPreset("zoho")?.smtp?.host, "smtp.zoho.com");
 });
 
 test("unknown domains do not invent provider settings", () => {
