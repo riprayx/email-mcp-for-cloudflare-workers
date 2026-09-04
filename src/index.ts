@@ -7,8 +7,10 @@ import { accessRejection } from "./access";
 import app from "./app";
 import { AccountStore } from "./mail/account-store";
 import { MailService } from "./mail/mail-service";
+import { resolveAccountSettings } from "./mail/providers";
 import type { MailEnv } from "./mail/types";
 import { observeTool } from "./observability";
+import { parsePermissionMode, toolAllowed } from "./permissions";
 
 const accountSelector = {
 	accountId: z
@@ -134,19 +136,23 @@ export class MyMCP extends McpAgent<MailEnv> {
 			clientId: env.OUTLOOK_CLIENT_ID,
 			clientSecret: env.OUTLOOK_CLIENT_SECRET,
 		});
+		const permissionMode = parsePermissionMode(env.MCP_PERMISSION_MODE);
+		const registerTool = (name: string, config: any, handler: any) => {
+			if (toolAllowed(permissionMode, name)) this.server.registerTool(name, config, handler);
+		};
 		const registerTools = (
 			names: string[],
 			config: any,
 			handler: (toolName: string) => any,
 		) => {
-			for (const name of names) this.server.registerTool(name, config, handler(name));
+			for (const name of names) registerTool(name, config, handler(name));
 		};
 
-		this.server.registerTool(
+		registerTool(
 			"email_add_account",
 			{
 				description:
-					"Add, configure, or connect a Gmail, Outlook, iCloud, or custom IMAP email account. Stores encrypted credentials and returns the new account ID and send capabilities. IMAP is required; SMTP is optional. Do not use to search, read, move, send, or delete messages.",
+					"Add or connect an email account using a provider preset or custom IMAP/SMTP settings. Known providers are detected from the email domain when provider is omitted; explicit server settings override preset defaults. Stores encrypted credentials and returns the account ID and send capabilities. IMAP is required; SMTP can be disabled.",
 				inputSchema: {
 					name: z
 						.string()
@@ -157,31 +163,58 @@ export class MyMCP extends McpAgent<MailEnv> {
 						.string()
 						.email()
 						.describe("Email address for this configured account."),
-					imapHost: z.string().describe("IMAP host used to read folders and messages."),
-					imapPort: z.number().int().default(993).describe("IMAP port; defaults to 993."),
+					provider: z
+						.string()
+						.trim()
+						.min(1)
+						.optional()
+						.describe(
+							"Optional provider preset ID such as gmail, outlook, icloud, netease-163, qq-mail, fastmail, yahoo, or zoho. Omit to auto-detect from the email domain; use custom to disable auto-detection.",
+						),
+					username: z
+						.string()
+						.trim()
+						.min(1)
+						.optional()
+						.describe(
+							"Optional IMAP/SMTP login username when it differs from the mailbox email address.",
+						),
+					imapHost: z
+						.string()
+						.optional()
+						.describe("Optional IMAP host override; inferred for known providers."),
+					imapPort: z
+						.number()
+						.int()
+						.optional()
+						.describe("Optional IMAP port override; inferred for known providers."),
 					imapSecure: z
 						.boolean()
-						.default(true)
-						.describe("Whether IMAP uses TLS; defaults to true."),
+						.optional()
+						.describe("Optional IMAP implicit-TLS override; inferred for known providers."),
+					smtpEnabled: z
+						.boolean()
+						.optional()
+						.describe("Set false to configure a read-only account without SMTP."),
 					smtpHost: z
 						.string()
 						.optional()
 						.describe(
-							"Optional SMTP host used to send drafts; omit for a read-only account.",
+							"Optional SMTP host override; inferred for known providers when SMTP is enabled.",
 						),
 					smtpPort: z
 						.number()
 						.int()
 						.optional()
-						.describe("Optional SMTP port; defaults to 465 when smtpHost is provided."),
+						.describe("Optional SMTP port override; inferred for known providers."),
 					smtpSecure: z
 						.boolean()
-						.default(true)
-						.describe("Whether SMTP uses TLS; defaults to true."),
+						.optional()
+						.describe("Optional SMTP implicit-TLS override; inferred for known providers."),
 					password: z
 						.string()
 						.optional()
-						.describe("Password or app password for IMAP/SMTP authentication."),
+						.describe("Password, app password, or authorization code for IMAP/SMTP authentication."),
 					accessToken: z
 						.string()
 						.optional()
@@ -220,23 +253,28 @@ export class MyMCP extends McpAgent<MailEnv> {
 					if (!input.password && !input.accessToken) {
 						throw new Error("Provide either password or accessToken");
 					}
-					if (!input.smtpHost && input.smtpPort)
-						throw new Error("smtpHost is required when smtpPort is provided");
-					const account = await store.add({
-						name: input.name,
+					const settings = resolveAccountSettings({
 						email: input.email,
+						provider: input.provider,
 						imap: {
 							host: input.imapHost,
 							port: input.imapPort,
 							secure: input.imapSecure,
 						},
-						smtp: input.smtpHost
-							? {
-									host: input.smtpHost,
-									port: input.smtpPort ?? 465,
-									secure: input.smtpSecure,
-								}
-							: undefined,
+						smtp: {
+							host: input.smtpHost,
+							port: input.smtpPort,
+							secure: input.smtpSecure,
+						},
+						smtpEnabled: input.smtpEnabled,
+					});
+					const account = await store.add({
+						name: input.name,
+						email: input.email,
+						provider: settings.provider,
+						username: input.username,
+						imap: settings.imap,
+						smtp: settings.smtp,
 						auth: input.password
 							? { type: "password", password: input.password }
 							: {
@@ -261,7 +299,7 @@ export class MyMCP extends McpAgent<MailEnv> {
 				}),
 		);
 
-		this.server.registerTool(
+		registerTool(
 			"email_list_accounts",
 			{
 				description:
@@ -302,7 +340,7 @@ export class MyMCP extends McpAgent<MailEnv> {
 				}),
 		);
 
-		this.server.registerTool(
+		registerTool(
 			"email_remove_account",
 			{
 				description:
@@ -322,7 +360,7 @@ export class MyMCP extends McpAgent<MailEnv> {
 				}),
 		);
 
-		this.server.registerTool(
+		registerTool(
 			"email_test_connection",
 			{
 				description:
@@ -344,7 +382,7 @@ export class MyMCP extends McpAgent<MailEnv> {
 				),
 		);
 
-		this.server.registerTool(
+		registerTool(
 			"email_list_folders",
 			{
 				description:
