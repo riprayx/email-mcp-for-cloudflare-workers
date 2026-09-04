@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { detectProvider, resolveProviderPreset } from "../src/mail/providers";
+
+test("detects NetEase 163 from email domain", () => {
+	assert.equal(detectProvider("user@163.com")?.id, "netease-163");
+});
+
+test("detects QQ mail from domain", () => {
+	assert.equal(detectProvider("user@qq.com")?.id, "qq-mail");
+});
+
+test("explicit provider preset returns IMAP and SMTP defaults", () => {
+	const preset = resolveProviderPreset("netease-163");
+	assert.equal(preset?.imap.host, "imap.163.com");
+	assert.equal(preset?.smtp?.host, "smtp.163.com");
+});
+
+test("unknown domains do not invent provider settings", () => {
+	assert.equal(detectProvider("user@example.com"), undefined);
+});
