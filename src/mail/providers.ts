@@ -157,8 +157,8 @@ export function resolveAccountSettings(input: AccountSettingsInput): ResolvedAcc
 	const imapHost = input.imap?.host ?? preset?.imap.host;
 	if (!imapHost) throw new Error("IMAP host is required for custom email providers");
 	const imap: ServerConfig = {
-		host: imapHost,
-		port: input.imap?.port ?? preset?.imap.port ?? 993,
+		host: validHost(imapHost, "IMAP host"),
+		port: validPort(input.imap?.port ?? preset?.imap.port ?? 993, "IMAP port"),
 		secure: input.imap?.secure ?? preset?.imap.secure ?? true,
 	};
 
@@ -174,9 +174,27 @@ export function resolveAccountSettings(input: AccountSettingsInput): ResolvedAcc
 		provider: preset?.id,
 		imap,
 		smtp: {
-			host: smtpHost,
-			port: input.smtp?.port ?? preset?.smtp?.port ?? 465,
+			host: validHost(smtpHost, "SMTP host"),
+			port: validPort(input.smtp?.port ?? preset?.smtp?.port ?? 465, "SMTP port"),
 			secure: input.smtp?.secure ?? preset?.smtp?.secure ?? true,
 		},
 	};
+}
+
+function validPort(port: number, label: string): number {
+	if (!Number.isInteger(port) || port < 1 || port > 65_535)
+		throw new Error(`${label} must be between 1 and 65535`);
+	return port;
+}
+
+function validHost(value: string, label: string): string {
+	const host = value.trim();
+	if (
+		host.length > 253 ||
+		!/^(?=.{1,253}$)(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)*[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?$/i.test(
+			host,
+		)
+	)
+		throw new Error(`${label} is invalid`);
+	return host;
 }
