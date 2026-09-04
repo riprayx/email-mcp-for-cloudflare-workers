@@ -152,7 +152,7 @@ export function resolveAccountSettings(input: AccountSettingsInput): ResolvedAcc
 	const explicit = input.provider ? resolveProviderPreset(input.provider) : undefined;
 	if (input.provider && input.provider !== "custom" && !explicit)
 		throw new Error(`Unknown email provider: ${input.provider}`);
-	const preset = explicit ?? detectProvider(input.email);
+	const preset = input.provider === "custom" ? undefined : explicit ?? detectProvider(input.email);
 
 	const imapHost = input.imap?.host ?? preset?.imap.host;
 	if (!imapHost) throw new Error("IMAP host is required for custom email providers");
