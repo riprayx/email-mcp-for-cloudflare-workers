@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { detectProvider, resolveProviderPreset } from "../src/mail/providers";
+import { detectProvider, resolveProviderPreset } from "../src/mail/providers.ts";
 
 test("detects NetEase 163 from email domain", () => {
 	assert.equal(detectProvider("user@163.com")?.id, "netease-163");
