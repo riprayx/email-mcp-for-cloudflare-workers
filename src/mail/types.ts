@@ -21,7 +21,13 @@ export interface MailAccount {
 	id: string;
 	name: string;
 	email: string;
+	provider?: string;
+	username?: string;
 	imap: ServerConfig;
 	smtp?: ServerConfig;
 	auth: AccountAuth;
+}
+
+export function accountUsername(account: Pick<MailAccount, "email" | "username">): string {
+	return account.username?.trim() || account.email;
 }
