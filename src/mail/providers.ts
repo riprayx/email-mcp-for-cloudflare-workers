@@ -138,6 +138,12 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
 	},
 ];
 
+const NETEASE_IMAP_HOSTS = new Set(
+	PROVIDER_PRESETS.filter((provider) => provider.id.startsWith("netease-")).map(
+		(provider) => provider.imap.host.toLowerCase(),
+	),
+);
+
 export function detectProvider(email: string): ProviderPreset | undefined {
 	const domain = email.split("@").pop()?.toLowerCase();
 	if (!domain) return undefined;
@@ -146,6 +152,10 @@ export function detectProvider(email: string): ProviderPreset | undefined {
 
 export function resolveProviderPreset(id: string): ProviderPreset | undefined {
 	return PROVIDER_PRESETS.find((provider) => provider.id === id);
+}
+
+export function requiresImapClientId(host: string): boolean {
+	return NETEASE_IMAP_HOSTS.has(host.trim().toLowerCase());
 }
 
 export function resolveAccountSettings(input: AccountSettingsInput): ResolvedAccountSettings {
