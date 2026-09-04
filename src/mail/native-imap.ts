@@ -1,5 +1,6 @@
 import { connect } from "cloudflare:sockets";
 import { decodeHeaderWords } from "./mime";
+import { requiresImapClientId } from "./providers";
 import { accountUsername, type MailAccount } from "./types";
 
 interface ImapResponse {
@@ -69,6 +70,11 @@ export class NativeImapSession {
 
 		if (!this.account.imap.secure) await this.startTls();
 		await this.authenticate();
+		if (requiresImapClientId(this.account.imap.host)) {
+			await this.command(
+				'ID ("name" "email-mcp-server" "version" "1.0.0" "vendor" "email-mcp-for-cloudflare-workers")',
+			);
+		}
 	}
 
 	async listFolders() {
