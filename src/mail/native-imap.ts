@@ -1,6 +1,6 @@
 import { connect } from "cloudflare:sockets";
 import { decodeHeaderWords } from "./mime";
-import type { MailAccount } from "./types";
+import { accountUsername, type MailAccount } from "./types";
 
 interface ImapResponse {
 	line: string;
@@ -392,13 +392,12 @@ export class NativeImapSession {
 	}
 
 	private async authenticate(): Promise<void> {
+		const username = accountUsername(this.account);
 		if (this.account.auth.type === "password") {
-			await this.command(
-				`LOGIN ${quote(this.account.email)} ${quote(this.account.auth.password)}`,
-			);
+			await this.command(`LOGIN ${quote(username)} ${quote(this.account.auth.password)}`);
 			return;
 		}
-		const payload = `user=${this.account.email}\x01auth=Bearer ${this.account.auth.accessToken}\x01\x01`;
+		const payload = `user=${username}\x01auth=Bearer ${this.account.auth.accessToken}\x01\x01`;
 		await this.command(`AUTHENTICATE XOAUTH2 ${btoa(payload)}`);
 	}
 
