@@ -20,6 +20,18 @@ test("explicit server settings override provider defaults", () => {
 	assert.deepEqual(resolved.smtp, { host: "smtp.163.com", port: 587, secure: false });
 });
 
+test("explicit custom provider disables domain autodetection", () => {
+	const resolved = resolveAccountSettings({
+		email: "user@163.com",
+		provider: "custom",
+		imap: { host: "imap.example.com", port: 1993, secure: false },
+		smtp: { host: "smtp.example.com", port: 1587, secure: false },
+	});
+	assert.equal(resolved.provider, undefined);
+	assert.deepEqual(resolved.imap, { host: "imap.example.com", port: 1993, secure: false });
+	assert.deepEqual(resolved.smtp, { host: "smtp.example.com", port: 1587, secure: false });
+});
+
 test("smtp can be disabled even when provider has a default", () => {
 	assert.equal(resolveAccountSettings({ email: "user@163.com", smtpEnabled: false }).smtp, undefined);
 });
