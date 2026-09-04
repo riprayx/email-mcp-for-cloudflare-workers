@@ -1,4 +1,6 @@
-export interface MailEnv extends Cloudflare.Env {}
+export interface MailEnv extends Cloudflare.Env {
+	MCP_PERMISSION_MODE?: string;
+}
 
 export interface ServerConfig {
 	host: string;
