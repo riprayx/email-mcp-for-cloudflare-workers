@@ -39,3 +39,23 @@ test("smtp can be disabled even when provider has a default", () => {
 test("unknown provider requires explicit IMAP host", () => {
 	assert.throws(() => resolveAccountSettings({ email: "user@example.com" }), /IMAP host/);
 });
+
+test("rejects invalid custom hosts and ports", () => {
+	assert.throws(
+		() => resolveAccountSettings({ email: "user@example.com", provider: "custom", imap: { host: "bad host" } }),
+		/IMAP host/,
+	);
+	assert.throws(
+		() => resolveAccountSettings({ email: "user@example.com", provider: "custom", imap: { host: "imap.example.com", port: 0 } }),
+		/IMAP port/,
+	);
+	assert.throws(
+		() => resolveAccountSettings({
+			email: "user@example.com",
+			provider: "custom",
+			imap: { host: "imap.example.com" },
+			smtp: { host: "smtp.example.com", port: 70_000 },
+		}),
+		/SMTP port/,
+	);
+});
