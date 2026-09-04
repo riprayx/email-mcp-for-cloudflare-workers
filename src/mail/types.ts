@@ -33,3 +33,11 @@ export interface MailAccount {
 export function accountUsername(account: Pick<MailAccount, "email" | "username">): string {
 	return account.username?.trim() || account.email;
 }
+
+export function preserveAccountMetadata(existing: MailAccount, updated: MailAccount): MailAccount {
+	return {
+		...updated,
+		provider: updated.provider ?? existing.provider,
+		username: updated.username ?? existing.username,
+	};
+}
