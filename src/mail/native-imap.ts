@@ -71,9 +71,12 @@ export class NativeImapSession {
 		if (!this.account.imap.secure) await this.startTls();
 		await this.authenticate();
 		if (requiresImapClientId(this.account.imap.host)) {
-			await this.command(
-				'ID ("name" "email-mcp-server" "version" "1.0.0" "vendor" "email-mcp-for-cloudflare-workers")',
-			);
+			const capabilities = await this.capabilities();
+			if (capabilities.some((capability) => capability.toUpperCase() === "ID")) {
+				await this.command(
+					'ID ("name" "email-mcp-server" "version" "1.0.0" "vendor" "email-mcp-for-cloudflare-workers")',
+				);
+			}
 		}
 	}
 
