@@ -1,4 +1,4 @@
-import type { MailAccount } from "./types";
+import { preserveAccountMetadata, type MailAccount } from "./types";
 import { decrypt, encrypt } from "../crypto";
 
 const STORAGE_KEY = "mail/accounts/v1";
@@ -40,7 +40,7 @@ export class AccountStore {
 		const accounts = await this.list();
 		const index = accounts.findIndex((candidate) => candidate.id === account.id);
 		if (index < 0) throw new Error(`Account ${account.id} not found`);
-		accounts[index] = account;
+		accounts[index] = preserveAccountMetadata(accounts[index], account);
 		await this.save(accounts);
 	}
 
