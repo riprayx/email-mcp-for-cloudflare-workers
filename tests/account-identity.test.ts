@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { accountUsername, preserveAccountMetadata } from "../src/mail/types";
+import { accountUsername, preserveAccountMetadata } from "../src/mail/types.ts";
 
 test("uses explicit login username when provided", () => {
 	assert.equal(
