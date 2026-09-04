@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resolveAccountSettings } from "../src/mail/providers";
+import { resolveAccountSettings } from "../src/mail/providers.ts";
 
 test("fills known provider defaults from email domain", () => {
 	assert.deepEqual(resolveAccountSettings({ email: "user@163.com" }), {
