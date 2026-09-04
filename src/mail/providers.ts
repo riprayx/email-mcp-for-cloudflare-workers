@@ -9,6 +9,20 @@ export interface ProviderPreset {
 	notes: string;
 }
 
+export interface AccountSettingsInput {
+	email: string;
+	provider?: string;
+	imap?: Partial<ServerConfig>;
+	smtp?: Partial<ServerConfig>;
+	smtpEnabled?: boolean;
+}
+
+export interface ResolvedAccountSettings {
+	provider?: string;
+	imap: ServerConfig;
+	smtp?: ServerConfig;
+}
+
 export const PROVIDER_PRESETS: ProviderPreset[] = [
 	{
 		id: "gmail",
@@ -61,10 +75,34 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
 	{
 		id: "qq-mail",
 		name: "QQ Mail",
-		domains: ["qq.com"],
+		domains: ["qq.com", "foxmail.com"],
 		imap: { host: "imap.qq.com", port: 993, secure: true },
 		smtp: { host: "smtp.qq.com", port: 465, secure: true },
-		notes: "Use QQ mailbox authorization code.",
+		notes: "Use a QQ Mail authorization code.",
+	},
+	{
+		id: "fastmail",
+		name: "Fastmail",
+		domains: ["fastmail.com"],
+		imap: { host: "imap.fastmail.com", port: 993, secure: true },
+		smtp: { host: "smtp.fastmail.com", port: 465, secure: true },
+		notes: "Use a Fastmail app password.",
+	},
+	{
+		id: "yahoo",
+		name: "Yahoo Mail",
+		domains: ["yahoo.com"],
+		imap: { host: "imap.mail.yahoo.com", port: 993, secure: true },
+		smtp: { host: "smtp.mail.yahoo.com", port: 465, secure: true },
+		notes: "Use a Yahoo app password.",
+	},
+	{
+		id: "zoho",
+		name: "Zoho Mail",
+		domains: ["zoho.com"],
+		imap: { host: "imap.zoho.com", port: 993, secure: true },
+		smtp: { host: "smtp.zoho.com", port: 465, secure: true },
+		notes: "Enable IMAP access before connecting.",
 	},
 ];
 
@@ -76,4 +114,37 @@ export function detectProvider(email: string): ProviderPreset | undefined {
 
 export function resolveProviderPreset(id: string): ProviderPreset | undefined {
 	return PROVIDER_PRESETS.find((provider) => provider.id === id);
+}
+
+export function resolveAccountSettings(input: AccountSettingsInput): ResolvedAccountSettings {
+	const explicit = input.provider ? resolveProviderPreset(input.provider) : undefined;
+	if (input.provider && input.provider !== "custom" && !explicit)
+		throw new Error(`Unknown email provider: ${input.provider}`);
+	const preset = explicit ?? detectProvider(input.email);
+
+	const imapHost = input.imap?.host ?? preset?.imap.host;
+	if (!imapHost) throw new Error("IMAP host is required for custom email providers");
+	const imap: ServerConfig = {
+		host: imapHost,
+		port: input.imap?.port ?? preset?.imap.port ?? 993,
+		secure: input.imap?.secure ?? preset?.imap.secure ?? true,
+	};
+
+	if (input.smtpEnabled === false) return { provider: preset?.id, imap };
+	const smtpHost = input.smtp?.host ?? preset?.smtp?.host;
+	if (!smtpHost) {
+		if (input.smtp?.port !== undefined || input.smtp?.secure !== undefined)
+			throw new Error("SMTP host is required when SMTP settings are provided");
+		return { provider: preset?.id, imap };
+	}
+
+	return {
+		provider: preset?.id,
+		imap,
+		smtp: {
+			host: smtpHost,
+			port: input.smtp?.port ?? preset?.smtp?.port ?? 465,
+			secure: input.smtp?.secure ?? preset?.smtp?.secure ?? true,
+		},
+	};
 }
