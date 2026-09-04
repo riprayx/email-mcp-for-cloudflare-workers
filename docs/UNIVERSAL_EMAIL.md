@@ -19,6 +19,8 @@ Any other standards-compliant mailbox remains supported by supplying custom IMAP
 
 ## Add an account through MCP
 
+`email_add_account` is registered only in `MCP_PERMISSION_MODE=full`. The default `mail` mode intentionally keeps account administration out of the MCP tool surface; use the Web management UI for account setup when staying on the default mode.
+
 For a known provider, `email_add_account` only needs the account identity and credential. Server settings are inferred from the email domain:
 
 ```json
