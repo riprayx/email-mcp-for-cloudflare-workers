@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parsePermissionMode, toolAllowed } from "../src/permissions";
+import { parsePermissionMode, toolAllowed } from "../src/permissions.ts";
 
 test("defaults MCP permission mode to mail", () => {
 	assert.equal(parsePermissionMode(undefined), "mail");
