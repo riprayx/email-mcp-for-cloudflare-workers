@@ -60,6 +60,10 @@ If the Web UI later needs first-class buttons for every provider, render them fr
 
 Protocol differences are handled only when backed by a real provider requirement. NetEase IMAP hosts send RFC 2971 `ID` after authentication and before mailbox selection when the server advertises the `ID` capability, preventing the documented `SELECT Unsafe Login` failure without affecting other providers.
 
+### OAuth refresh boundary
+
+The native IMAP/SMTP transports can use a supplied XOAUTH2 access token for any compatible provider, but the existing automatic refresh implementation is Microsoft-specific. Refresh is therefore entered only for accounts explicitly marked as Outlook or legacy accounts using `outlook.office365.com`. Non-Outlook refresh tokens and client IDs are never sent to the Microsoft token endpoint. Provider-specific onboarding and refresh are deferred until each provider has a concrete implementation.
+
 ### Permission modes
 
 Add deployment-level `MCP_PERMISSION_MODE` with:
@@ -82,6 +86,7 @@ New pure logic is test-first and runs without Cloudflare runtime dependencies:
 - server resolution/override behavior
 - custom provider fallback errors
 - NetEase host detection
+- Outlook-only Microsoft OAuth refresh routing
 - account login identity compatibility
 - permission mode parsing and tool filtering
 - SMTP post-DATA failure classification
@@ -90,7 +95,7 @@ Existing tests remain unchanged.
 
 ## Later phases
 
-- Gmail interactive OAuth onboarding using the existing Outlook flow as the second concrete implementation before extracting shared OAuth helpers.
+- Gmail interactive OAuth onboarding and Google-specific token refresh, using the existing Outlook flow as the second concrete implementation before extracting only proven shared OAuth helpers.
 - Rich structured SMTP delivery states (`not_sent`, `sent`, `sent_but_save_failed`, `unknown_delivery_state`) if clients need machine-readable reconciliation beyond the current fail-closed error.
 - More protocol/parser and live smoke tests against dedicated test mailboxes.
 - First-class Web UI provider buttons only if the Custom flow proves insufficient.
