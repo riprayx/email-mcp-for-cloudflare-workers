@@ -222,5 +222,5 @@ function authorizationErrorResponse(error: AuthorizationError): Response {
 	redirect.searchParams.set("error_description", error.description);
 	if (error.state) redirect.searchParams.set("state", error.state);
 	if (error.issuer) redirect.searchParams.set("iss", error.issuer);
-	return Response.redirect(redirect, 302);
+	return Response.redirect(redirect.href, 302);
 }
