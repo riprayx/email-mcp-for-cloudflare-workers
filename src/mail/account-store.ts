@@ -1,5 +1,5 @@
-import { preserveAccountMetadata, type MailAccount } from "./types";
-import { decrypt, encrypt } from "../crypto";
+import { preserveAccountMetadata, type MailAccount } from "./types.ts";
+import { decrypt, encrypt } from "../crypto.ts";
 
 const STORAGE_KEY = "mail/accounts/v1";
 
