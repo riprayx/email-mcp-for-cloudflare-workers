@@ -1,5 +1,5 @@
 import { connect } from "cloudflare:sockets";
-import { smtpDataFailureResult, SmtpResponseError } from "./smtp-errors";
+import { classifySmtpDataFailure, SmtpResponseError } from "./smtp-errors";
 import { accountUsername, type MailAccount, type ServerConfig } from "./types";
 
 export { buildDraftMessage, type DraftInput } from "./mime";
@@ -47,14 +47,9 @@ export class NativeSmtpSession {
 			try {
 				await this.expect(undefined, [250]);
 			} catch (error) {
-				return smtpDataFailureResult(error, messageId);
+				throw classifySmtpDataFailure(error);
 			}
-			return {
-				messageId,
-				accepted: recipients,
-				rejected: [] as string[],
-				deliveryState: "accepted" as const,
-			};
+			return { messageId, accepted: recipients, rejected: [] as string[] };
 		} finally {
 			await this.quit();
 		}
