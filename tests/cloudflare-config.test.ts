@@ -42,7 +42,6 @@ test("MCP, admin, and migration configs have separate security boundaries", () =
 	assert.deepEqual(configs.mcp.secrets.required, [
 		"OUTLOOK_CLIENT_SECRET",
 		"ACCESS_CLIENT_ID",
-		"ACCESS_CLIENT_SECRET",
 		"ACCESS_TOKEN_URL",
 		"ACCESS_AUTHORIZATION_URL",
 		"ACCESS_JWKS_URL",
