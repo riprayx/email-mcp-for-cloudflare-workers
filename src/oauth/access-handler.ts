@@ -1,7 +1,7 @@
-import {
+import type {
 	AuthorizationError,
-	type AuthRequest,
-	type OAuthHelpers,
+	AuthRequest,
+	OAuthHelpers,
 } from "@cloudflare/workers-oauth-provider";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { safeErrorCategory } from "../observability.ts";
@@ -67,8 +67,8 @@ export async function handleAccessRequest(
 		}
 		return new Response("Not Found", { status: 404 });
 	} catch (error) {
-		if (error instanceof AuthorizationError) return authorizationErrorResponse(error);
 		if (error instanceof OAuthError) return error.toResponse();
+		if (isAuthorizationError(error)) return authorizationErrorResponse(error);
 		console.error({
 			event: "mcp_oauth_error",
 			path: url.pathname,
@@ -213,6 +213,16 @@ async function verifyAccessIdToken(
 		sub: payload.sub,
 		name: typeof payload.name === "string" && payload.name ? payload.name : payload.email,
 	};
+}
+
+function isAuthorizationError(error: unknown): error is AuthorizationError {
+	if (!error || typeof error !== "object") return false;
+	const candidate = error as Partial<AuthorizationError>;
+	return (
+		typeof candidate.code === "string" &&
+		typeof candidate.description === "string" &&
+		"redirectUri" in candidate
+	);
 }
 
 function authorizationErrorResponse(error: AuthorizationError): Response {
