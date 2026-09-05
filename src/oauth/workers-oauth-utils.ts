@@ -227,36 +227,37 @@ export function getUpstreamAuthorizeUrl(params: {
 export async function fetchUpstreamAuthToken(params: {
 	upstream_url: string;
 	client_id: string;
-	client_secret: string;
+	client_secret?: string;
 	code?: string;
 	redirect_uri: string;
 	code_verifier: string;
 }): Promise<UpstreamTokenResult> {
 	if (!params.code) throw new OAuthError("invalid_request", "Missing authorization code");
+	const body = new URLSearchParams({
+		client_id: params.client_id,
+		code: params.code,
+		grant_type: "authorization_code",
+		redirect_uri: params.redirect_uri,
+		code_verifier: params.code_verifier,
+	});
+	if (params.client_secret) body.set("client_secret", params.client_secret);
 	const response = await fetch(params.upstream_url, {
 		method: "POST",
 		headers: {
 			Accept: "application/json",
 			"Content-Type": "application/x-www-form-urlencoded",
 		},
-		body: new URLSearchParams({
-			client_id: params.client_id,
-			client_secret: params.client_secret,
-			code: params.code,
-			grant_type: "authorization_code",
-			redirect_uri: params.redirect_uri,
-			code_verifier: params.code_verifier,
-		}),
+		body,
 	});
 	if (!response.ok)
 		throw new OAuthError("server_error", "Upstream authorization code exchange failed", 502);
-	let body: unknown;
+	let responseBody: unknown;
 	try {
-		body = await response.json();
+		responseBody = await response.json();
 	} catch {
 		throw new OAuthError("server_error", "Upstream token response was invalid", 502);
 	}
-	const token = body as { access_token?: unknown; id_token?: unknown };
+	const token = responseBody as { access_token?: unknown; id_token?: unknown };
 	if (typeof token.access_token !== "string" || typeof token.id_token !== "string")
 		throw new OAuthError("server_error", "Upstream token response was incomplete", 502);
 	return { accessToken: token.access_token, idToken: token.id_token };
