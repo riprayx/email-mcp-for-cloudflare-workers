@@ -100,7 +100,7 @@ export function buildCloudflareConfigs(environment = process.env) {
 		...sharedConfig,
 		...durableObjectConfig,
 		name: "email-mcp-server",
-		main: "src/migrate.ts",
+		main: "src/migrate-entry.ts",
 		secrets: {
 			required: [
 				"CREDENTIAL_ENCRYPTION_KEY",
