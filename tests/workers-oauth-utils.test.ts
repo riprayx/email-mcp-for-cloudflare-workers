@@ -3,6 +3,7 @@ import test from "node:test";
 import type { AuthRequest } from "@cloudflare/workers-oauth-provider";
 import {
 	createOAuthState,
+	fetchUpstreamAuthToken,
 	generateCSRFProtection,
 	getUpstreamAuthorizeUrl,
 	validateCSRFToken,
@@ -43,6 +44,31 @@ test("upstream authorization URL uses authorization code flow and S256 PKCE", ()
 	assert.equal(result.searchParams.get("response_type"), "code");
 	assert.equal(result.searchParams.get("code_challenge_method"), "S256");
 	assert.equal(result.searchParams.get("state"), "signed-state");
+});
+
+test("upstream token exchange supports a PKCE public client without client secret", async (context) => {
+	const originalFetch = globalThis.fetch;
+	let requestBody = "";
+	globalThis.fetch = async (_input, init) => {
+		requestBody = String(init?.body ?? "");
+		return Response.json({ access_token: "access-token", id_token: "id-token" });
+	};
+	context.after(() => {
+		globalThis.fetch = originalFetch;
+	});
+
+	const result = await fetchUpstreamAuthToken({
+		upstream_url: "https://team.cloudflareaccess.com/token",
+		client_id: "public-client",
+		code: "authorization-code",
+		redirect_uri: "https://worker.example/callback",
+		code_verifier: "pkce-verifier",
+	} as any);
+
+	const body = new URLSearchParams(requestBody);
+	assert.equal(body.get("client_secret"), null);
+	assert.equal(body.get("code_verifier"), "pkce-verifier");
+	assert.deepEqual(result, { accessToken: "access-token", idToken: "id-token" });
 });
 
 test("CSRF validation rejects mismatched form and cookie tokens", () => {
