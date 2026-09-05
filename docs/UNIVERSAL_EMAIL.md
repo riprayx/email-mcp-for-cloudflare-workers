@@ -55,7 +55,7 @@ Credentials are encrypted with the existing AES-256-GCM account store before bei
 
 For NetEase and QQ Mail, use the provider-issued client authorization code rather than the normal web-login password where the provider requires it.
 
-The native IMAP/SMTP clients can authenticate with a supplied XOAUTH2 access token. Automatic refresh is currently implemented only for Outlook/Microsoft accounts. Microsoft refresh is selected only for the Outlook provider or the legacy `outlook.office365.com` IMAP host, so Gmail or custom OAuth credentials are never sent to the Microsoft token endpoint. For non-Outlook providers, supply a currently valid access token or use the provider's app-password/authorization-code flow until provider-specific OAuth onboarding and refresh support is implemented.
+The native IMAP/SMTP clients can authenticate with a supplied XOAUTH2 access token. Automatic refresh is currently implemented only for the standard Outlook/Microsoft IMAP endpoint. Microsoft refresh is entered only when the stored IMAP host is actually `outlook.office365.com`; the provider label is deliberately not trusted because it can become stale after explicit server overrides or later account edits. Gmail and custom OAuth credentials are therefore never sent to the Microsoft token endpoint merely because of provider metadata. For non-Outlook providers, supply a currently valid access token or use the provider's app-password/authorization-code flow until provider-specific OAuth onboarding and refresh support is implemented.
 
 ## MCP permission modes
 
