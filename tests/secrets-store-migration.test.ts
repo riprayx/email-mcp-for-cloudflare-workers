@@ -62,11 +62,7 @@ test("account encryption migration preserves v1 and verifies a new v2 copy", asy
 	const originalBytes = Buffer.from(original);
 	const kv = memoryKv({ "mail/accounts/v1": original });
 
-	const result = await migrate(
-		kv as unknown as KVNamespace,
-		oldKey,
-		secretBinding(newKey),
-	);
+	const result = await migrate(kv as unknown as KVNamespace, oldKey, secretBinding(newKey));
 
 	assert.deepEqual(result, { count: 1, verified: true });
 	assert.deepEqual(Buffer.from(kv.values.get("mail/accounts/v1")!), originalBytes);
