@@ -139,8 +139,8 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
 ];
 
 const NETEASE_IMAP_HOSTS = new Set(
-	PROVIDER_PRESETS.filter((provider) => provider.id.startsWith("netease-")).map(
-		(provider) => provider.imap.host.toLowerCase(),
+	PROVIDER_PRESETS.filter((provider) => provider.id.startsWith("netease-")).map((provider) =>
+		provider.imap.host.toLowerCase(),
 	),
 );
 
@@ -167,7 +167,7 @@ export function resolveAccountSettings(input: AccountSettingsInput): ResolvedAcc
 	const explicit = providerId ? resolveProviderPreset(providerId) : undefined;
 	if (providerId && providerId !== "custom" && !explicit)
 		throw new Error(`Unknown email provider: ${providerId}`);
-	const preset = providerId === "custom" ? undefined : explicit ?? detectProvider(input.email);
+	const preset = providerId === "custom" ? undefined : (explicit ?? detectProvider(input.email));
 
 	const imapHost = input.imap?.host ?? preset?.imap.host;
 	if (!imapHost) throw new Error("IMAP host is required for custom email providers");

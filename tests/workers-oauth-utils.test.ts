@@ -80,7 +80,9 @@ test("OAuth state is signed, checked before KV lookup, and consumed once", async
 	const tamperedState = `${stateToken.slice(0, separator + 1)}${signatureFirstCharacter === "A" ? "B" : "A"}${stateToken.slice(separator + 2)}`;
 	await assert.rejects(
 		validateOAuthState(
-			new Request(`https://worker.example/callback?state=${encodeURIComponent(tamperedState)}`),
+			new Request(
+				`https://worker.example/callback?state=${encodeURIComponent(tamperedState)}`,
+			),
 			store.kv,
 			secret,
 		),

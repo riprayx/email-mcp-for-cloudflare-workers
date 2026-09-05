@@ -20,10 +20,7 @@ export function validateAccessJwtEnvironment(env: AccessJwtEnv): string {
 let cachedTeamDomain: string | undefined;
 let cachedJwks: ReturnType<typeof createRemoteJWKSet> | undefined;
 
-export async function verifyAccessJwt(
-	token: string,
-	env: AccessJwtEnv,
-): Promise<AccessIdentity> {
+export async function verifyAccessJwt(token: string, env: AccessJwtEnv): Promise<AccessIdentity> {
 	const teamDomain = validateAccessJwtEnvironment(env);
 	if (!cachedJwks || cachedTeamDomain !== teamDomain) {
 		cachedTeamDomain = teamDomain;

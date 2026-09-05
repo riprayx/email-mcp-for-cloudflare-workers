@@ -196,7 +196,9 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					imapSecure: z
 						.boolean()
 						.optional()
-						.describe("Optional IMAP implicit-TLS override; inferred for known providers."),
+						.describe(
+							"Optional IMAP implicit-TLS override; inferred for known providers.",
+						),
 					smtpEnabled: z
 						.boolean()
 						.optional()
@@ -215,11 +217,15 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					smtpSecure: z
 						.boolean()
 						.optional()
-						.describe("Optional SMTP implicit-TLS override; inferred for known providers."),
+						.describe(
+							"Optional SMTP implicit-TLS override; inferred for known providers.",
+						),
 					password: z
 						.string()
 						.optional()
-						.describe("Password, app password, or authorization code for IMAP/SMTP authentication."),
+						.describe(
+							"Password, app password, or authorization code for IMAP/SMTP authentication.",
+						),
 					accessToken: z
 						.string()
 						.optional()
@@ -497,32 +503,56 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 						.describe(
 							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
 						),
-					from: z.string().optional().describe("Find messages from this sender address or text."),
-					to: z.string().optional().describe("Find messages sent to this recipient address or text."),
-					cc: z.string().optional().describe("Find messages with this Cc recipient address or text."),
-					bcc: z.string().optional().describe("Find messages with this Bcc recipient address or text."),
+					from: z
+						.string()
+						.optional()
+						.describe("Find messages from this sender address or text."),
+					to: z
+						.string()
+						.optional()
+						.describe("Find messages sent to this recipient address or text."),
+					cc: z
+						.string()
+						.optional()
+						.describe("Find messages with this Cc recipient address or text."),
+					bcc: z
+						.string()
+						.optional()
+						.describe("Find messages with this Bcc recipient address or text."),
 					subject: z
 						.string()
 						.optional()
 						.describe("Find messages whose Subject header contains this text."),
-					body: z.string().optional().describe("Find messages whose body contains this text."),
+					body: z
+						.string()
+						.optional()
+						.describe("Find messages whose body contains this text."),
 					text: z
 						.string()
 						.optional()
-						.describe("Find messages containing this text anywhere in message headers or body."),
+						.describe(
+							"Find messages containing this text anywhere in message headers or body.",
+						),
 					messageId: z
 						.string()
 						.optional()
-						.describe("Find messages by exact or partial Message-ID header; this is not an IMAP UID."),
+						.describe(
+							"Find messages by exact or partial Message-ID header; this is not an IMAP UID.",
+						),
 					since: z
 						.string()
 						.optional()
-						.describe("Find messages with internal mailbox date on or after this ISO date."),
+						.describe(
+							"Find messages with internal mailbox date on or after this ISO date.",
+						),
 					before: z
 						.string()
 						.optional()
 						.describe("Find messages with internal mailbox date before this ISO date."),
-					on: z.string().optional().describe("Find messages with this exact internal mailbox ISO date."),
+					on: z
+						.string()
+						.optional()
+						.describe("Find messages with this exact internal mailbox ISO date."),
 					sentSince: z
 						.string()
 						.optional()
@@ -531,7 +561,10 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 						.string()
 						.optional()
 						.describe("Find messages whose Date header is before this ISO date."),
-					seen: z.enum(["any", "seen", "unseen"]).default("any").describe("Filter by read state: any, seen, or unseen."),
+					seen: z
+						.enum(["any", "seen", "unseen"])
+						.default("any")
+						.describe("Filter by read state: any, seen, or unseen."),
 					flagged: z
 						.enum(["any", "flagged", "unflagged"])
 						.default("any")
@@ -539,7 +572,9 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					answered: z
 						.enum(["any", "answered", "unanswered"])
 						.default("any")
-						.describe("Filter by answered/replied state: any, answered, or unanswered."),
+						.describe(
+							"Filter by answered/replied state: any, answered, or unanswered.",
+						),
 					draft: z
 						.enum(["any", "draft", "not_draft"])
 						.default("any")
@@ -553,8 +588,18 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 						.regex(/^[A-Za-z0-9$][A-Za-z0-9$._-]*$/)
 						.optional()
 						.describe("Find messages with this IMAP keyword or provider label."),
-					largerThan: z.number().int().nonnegative().optional().describe("Find messages larger than this minimum size in bytes."),
-					smallerThan: z.number().int().nonnegative().optional().describe("Find messages smaller than this maximum size in bytes."),
+					largerThan: z
+						.number()
+						.int()
+						.nonnegative()
+						.optional()
+						.describe("Find messages larger than this minimum size in bytes."),
+					smallerThan: z
+						.number()
+						.int()
+						.nonnegative()
+						.optional()
+						.describe("Find messages smaller than this maximum size in bytes."),
 					limit: z
 						.number()
 						.int()
@@ -565,7 +610,9 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					cursor: z
 						.string()
 						.optional()
-						.describe("Opaque nextCursor returned by the previous identical email_search_messages call."),
+						.describe(
+							"Opaque nextCursor returned by the previous identical email_search_messages call.",
+						),
 					sortOrder: z
 						.enum(["newest", "oldest"])
 						.default("newest")
@@ -597,30 +644,124 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Find, search, lookup, locate, or show message summaries across all configured accounts or selected accountIds in one folder using sender, recipient, subject, keywords, dates, size, flags, Message-ID, or free text filters. Returns a flat message summary list with account identity plus per-account totals, nextCursor values, and errors. Use before get, move, archive, trash, permanently delete, or flag updates when you do not already know the accountId, folder, and IMAP UID. Do not use to retrieve full message contents.",
 				inputSchema: {
 					...accountIdsSelector,
-					folder: z.string().default("INBOX").describe("Exact IMAP folder path returned by email_list_folders; defaults to INBOX."),
-					from: z.string().optional().describe("Find messages from this sender address or text."),
-					to: z.string().optional().describe("Find messages sent to this recipient address or text."),
-					cc: z.string().optional().describe("Find messages with this Cc recipient address or text."),
-					bcc: z.string().optional().describe("Find messages with this Bcc recipient address or text."),
-					subject: z.string().optional().describe("Find messages whose Subject header contains this text."),
-					body: z.string().optional().describe("Find messages whose body contains this text."),
-					text: z.string().optional().describe("Find messages containing this text anywhere in message headers or body."),
-					messageId: z.string().optional().describe("Find messages by exact or partial Message-ID header; this is not an IMAP UID."),
-					since: z.string().optional().describe("Find messages with internal mailbox date on or after this ISO date."),
-					before: z.string().optional().describe("Find messages with internal mailbox date before this ISO date."),
-					on: z.string().optional().describe("Find messages with this exact internal mailbox ISO date."),
-					sentSince: z.string().optional().describe("Find messages whose Date header is on or after this ISO date."),
-					sentBefore: z.string().optional().describe("Find messages whose Date header is before this ISO date."),
-					seen: z.enum(["any", "seen", "unseen"]).default("any").describe("Filter by read state: any, seen, or unseen."),
-					flagged: z.enum(["any", "flagged", "unflagged"]).default("any").describe("Filter by flagged state: any, flagged, or unflagged."),
-					answered: z.enum(["any", "answered", "unanswered"]).default("any").describe("Filter by answered/replied state: any, answered, or unanswered."),
-					draft: z.enum(["any", "draft", "not_draft"]).default("any").describe("Filter by draft state: any, draft, or not_draft."),
-					deleted: z.enum(["any", "deleted", "not_deleted"]).default("any").describe("Filter by IMAP deleted state: any, deleted, or not_deleted."),
-					keyword: z.string().regex(/^[A-Za-z0-9$][A-Za-z0-9$._-]*$/).optional().describe("Find messages with this IMAP keyword or provider label."),
-					largerThan: z.number().int().nonnegative().optional().describe("Find messages larger than this minimum size in bytes."),
-					smallerThan: z.number().int().nonnegative().optional().describe("Find messages smaller than this maximum size in bytes."),
-					limit: z.number().int().min(1).max(100).default(25).describe("Maximum number of message summaries to return per selected account, from 1 to 100."),
-					sortOrder: z.enum(["newest", "oldest"]).default("newest").describe("Order message summaries by message date within each account: newest or oldest."),
+					folder: z
+						.string()
+						.default("INBOX")
+						.describe(
+							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
+						),
+					from: z
+						.string()
+						.optional()
+						.describe("Find messages from this sender address or text."),
+					to: z
+						.string()
+						.optional()
+						.describe("Find messages sent to this recipient address or text."),
+					cc: z
+						.string()
+						.optional()
+						.describe("Find messages with this Cc recipient address or text."),
+					bcc: z
+						.string()
+						.optional()
+						.describe("Find messages with this Bcc recipient address or text."),
+					subject: z
+						.string()
+						.optional()
+						.describe("Find messages whose Subject header contains this text."),
+					body: z
+						.string()
+						.optional()
+						.describe("Find messages whose body contains this text."),
+					text: z
+						.string()
+						.optional()
+						.describe(
+							"Find messages containing this text anywhere in message headers or body.",
+						),
+					messageId: z
+						.string()
+						.optional()
+						.describe(
+							"Find messages by exact or partial Message-ID header; this is not an IMAP UID.",
+						),
+					since: z
+						.string()
+						.optional()
+						.describe(
+							"Find messages with internal mailbox date on or after this ISO date.",
+						),
+					before: z
+						.string()
+						.optional()
+						.describe("Find messages with internal mailbox date before this ISO date."),
+					on: z
+						.string()
+						.optional()
+						.describe("Find messages with this exact internal mailbox ISO date."),
+					sentSince: z
+						.string()
+						.optional()
+						.describe("Find messages whose Date header is on or after this ISO date."),
+					sentBefore: z
+						.string()
+						.optional()
+						.describe("Find messages whose Date header is before this ISO date."),
+					seen: z
+						.enum(["any", "seen", "unseen"])
+						.default("any")
+						.describe("Filter by read state: any, seen, or unseen."),
+					flagged: z
+						.enum(["any", "flagged", "unflagged"])
+						.default("any")
+						.describe("Filter by flagged state: any, flagged, or unflagged."),
+					answered: z
+						.enum(["any", "answered", "unanswered"])
+						.default("any")
+						.describe(
+							"Filter by answered/replied state: any, answered, or unanswered.",
+						),
+					draft: z
+						.enum(["any", "draft", "not_draft"])
+						.default("any")
+						.describe("Filter by draft state: any, draft, or not_draft."),
+					deleted: z
+						.enum(["any", "deleted", "not_deleted"])
+						.default("any")
+						.describe("Filter by IMAP deleted state: any, deleted, or not_deleted."),
+					keyword: z
+						.string()
+						.regex(/^[A-Za-z0-9$][A-Za-z0-9$._-]*$/)
+						.optional()
+						.describe("Find messages with this IMAP keyword or provider label."),
+					largerThan: z
+						.number()
+						.int()
+						.nonnegative()
+						.optional()
+						.describe("Find messages larger than this minimum size in bytes."),
+					smallerThan: z
+						.number()
+						.int()
+						.nonnegative()
+						.optional()
+						.describe("Find messages smaller than this maximum size in bytes."),
+					limit: z
+						.number()
+						.int()
+						.min(1)
+						.max(100)
+						.default(25)
+						.describe(
+							"Maximum number of message summaries to return per selected account, from 1 to 100.",
+						),
+					sortOrder: z
+						.enum(["newest", "oldest"])
+						.default("newest")
+						.describe(
+							"Order message summaries by message date within each account: newest or oldest.",
+						),
 				},
 				outputSchema: multiAccountSearchOutput,
 				annotations: titled("Search All Email", remoteRead),
@@ -636,8 +777,21 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"List, show, lookup, or check message summaries from INBOX across all configured email accounts or selected accountIds. Returns the newest inbox message summaries by default with accountId, accountName, accountEmail, folder, IMAP UID, headers, dates, flags, per-account totals, nextCursor values, and per-account errors. Read-only. Use this for a quick all-inboxes view; use email_search_all_accounts when you need filters or a folder other than INBOX.",
 				inputSchema: {
 					...accountIdsSelector,
-					limit: z.number().int().min(1).max(100).default(25).describe("Maximum number of INBOX message summaries to return per selected account, from 1 to 100."),
-					sortOrder: z.enum(["newest", "oldest"]).default("newest").describe("Order INBOX message summaries by message date within each account: newest or oldest."),
+					limit: z
+						.number()
+						.int()
+						.min(1)
+						.max(100)
+						.default(25)
+						.describe(
+							"Maximum number of INBOX message summaries to return per selected account, from 1 to 100.",
+						),
+					sortOrder: z
+						.enum(["newest", "oldest"])
+						.default("newest")
+						.describe(
+							"Order INBOX message summaries by message date within each account: newest or oldest.",
+						),
 				},
 				outputSchema: multiAccountSearchOutput,
 				annotations: titled("List All Inbox Messages", remoteRead),
@@ -653,9 +807,24 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Get, retrieve, open, or download one attachment from a message as base64. Requires accountId when needed, exact folder path, IMAP UID, and attachmentIndex returned by email_get_message. Returns attachment metadata and contentBase64 containing raw attachment bytes. Do not use to get message text, HTML, or to search for messages.",
 				inputSchema: {
 					...accountSelector,
-					folder: z.string().default("INBOX").describe("Exact IMAP folder path returned by email_list_folders; defaults to INBOX."),
-					uid: z.number().int().positive().describe("IMAP UID returned by search/get/thread results; not the email Message-ID header."),
-					attachmentIndex: z.number().int().nonnegative().describe("Zero-based attachmentIndex returned by email_get_message."),
+					folder: z
+						.string()
+						.default("INBOX")
+						.describe(
+							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
+						),
+					uid: z
+						.number()
+						.int()
+						.positive()
+						.describe(
+							"IMAP UID returned by search/get/thread results; not the email Message-ID header.",
+						),
+					attachmentIndex: z
+						.number()
+						.int()
+						.nonnegative()
+						.describe("Zero-based attachmentIndex returned by email_get_message."),
 				},
 				outputSchema: {
 					accountId: z.string(),
@@ -670,10 +839,11 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 				},
 				annotations: titled("Get Email Attachment", remoteRead),
 			},
-			(toolName) => async ({ accountId, folder, uid, attachmentIndex }: any) =>
-				observeTool(toolName, async () =>
-					text(await mail.getAttachment(accountId, folder, uid, attachmentIndex)),
-				),
+			(toolName) =>
+				async ({ accountId, folder, uid, attachmentIndex }: any) =>
+					observeTool(toolName, async () =>
+						text(await mail.getAttachment(accountId, folder, uid, attachmentIndex)),
+					),
 		);
 
 		registerTools(
@@ -683,8 +853,18 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Get, retrieve, open, read, or show the full contents of one email message. Requires accountId when needed plus exact folder path and IMAP UID returned by email_search_messages, email_search_all_accounts, or email_get_message_thread. Returns headers, text, HTML, flags, and attachment indexes. Do not use for searching or locating unknown messages.",
 				inputSchema: {
 					...accountSelector,
-					folder: z.string().default("INBOX").describe("Exact IMAP folder path returned by email_list_folders; defaults to INBOX."),
-					uid: z.number().int().describe("IMAP UID returned by search/get/thread results; not the email Message-ID header."),
+					folder: z
+						.string()
+						.default("INBOX")
+						.describe(
+							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
+						),
+					uid: z
+						.number()
+						.int()
+						.describe(
+							"IMAP UID returned by search/get/thread results; not the email Message-ID header.",
+						),
 				},
 				outputSchema: {
 					accountId: z.string(),
@@ -700,13 +880,22 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					date: z.string().optional(),
 					text: z.string().optional(),
 					html: z.string().optional(),
-					attachments: z.array(z.object({ attachmentIndex: z.number().int(), filename: z.string().optional(), contentType: z.string(), size: z.number().int() })),
+					attachments: z.array(
+						z.object({
+							attachmentIndex: z.number().int(),
+							filename: z.string().optional(),
+							contentType: z.string(),
+							size: z.number().int(),
+						}),
+					),
 					flags: z.array(z.string()),
 				},
 				annotations: titled("Get Email", remoteRead),
 			},
 			(toolName) => async (input: any) =>
-				observeTool(toolName, async () => text(await mail.getMessage(input.accountId, input.folder, input.uid))),
+				observeTool(toolName, async () =>
+					text(await mail.getMessage(input.accountId, input.folder, input.uid)),
+				),
 		);
 
 		registerTools(
@@ -716,9 +905,28 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Find, get, lookup, or show message summaries in the same header-based conversation as one known message. Requires accountId when needed, exact folder path, and an IMAP UID returned by search or get. Returns thread message summaries ordered oldest first. Do not use to retrieve full message bodies; use email_get_message for each returned IMAP UID.",
 				inputSchema: {
 					...accountSelector,
-					folder: z.string().default("INBOX").describe("Exact IMAP folder path returned by email_list_folders; defaults to INBOX."),
-					uid: z.number().int().positive().describe("IMAP UID of any message in the thread, returned by search/get results; not the email Message-ID header."),
-					limit: z.number().int().min(1).max(100).default(100).describe("Maximum number of thread message summaries to return, from 1 to 100."),
+					folder: z
+						.string()
+						.default("INBOX")
+						.describe(
+							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
+						),
+					uid: z
+						.number()
+						.int()
+						.positive()
+						.describe(
+							"IMAP UID of any message in the thread, returned by search/get results; not the email Message-ID header.",
+						),
+					limit: z
+						.number()
+						.int()
+						.min(1)
+						.max(100)
+						.default(100)
+						.describe(
+							"Maximum number of thread message summaries to return, from 1 to 100.",
+						),
 				},
 				outputSchema: {
 					accountId: z.string(),
@@ -731,8 +939,11 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 				},
 				annotations: titled("Get Email Thread", remoteRead),
 			},
-			(toolName) => async ({ accountId, folder, uid, limit }: any) =>
-				observeTool(toolName, async () => text(await mail.getThread(accountId, folder, uid, limit))),
+			(toolName) =>
+				async ({ accountId, folder, uid, limit }: any) =>
+					observeTool(toolName, async () =>
+						text(await mail.getThread(accountId, folder, uid, limit)),
+					),
 		);
 
 		registerTools(
@@ -742,18 +953,43 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Mark, update, set, or clear read/unread and flagged states for one message or a batch in one account and folder. Requires folder and IMAP UID values from email_search_messages, email_search_all_accounts, or email_get_message_thread. Side effect: updates message flags only; does not move, archive, trash, permanently delete, or send messages.",
 				inputSchema: {
 					...accountSelector,
-					folder: z.string().default("INBOX").describe("Exact IMAP folder path returned by email_list_folders; defaults to INBOX."),
-					uid: uidSchema.describe("One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers."),
-					seen: z.boolean().optional().describe("True marks messages read/seen; false marks messages unread/unseen."),
-					flagged: z.boolean().optional().describe("True flags messages; false unflags messages."),
+					folder: z
+						.string()
+						.default("INBOX")
+						.describe(
+							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
+						),
+					uid: uidSchema.describe(
+						"One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers.",
+					),
+					seen: z
+						.boolean()
+						.optional()
+						.describe(
+							"True marks messages read/seen; false marks messages unread/unseen.",
+						),
+					flagged: z
+						.boolean()
+						.optional()
+						.describe("True flags messages; false unflags messages."),
 				},
-				outputSchema: { uid: uidSchema, seen: z.boolean().optional(), flagged: z.boolean().optional() },
+				outputSchema: {
+					uid: uidSchema,
+					seen: z.boolean().optional(),
+					flagged: z.boolean().optional(),
+				},
 				annotations: titled("Mark Email", remoteUpdate),
 			},
 			(toolName) => async (input: any) =>
 				observeTool(toolName, async () => {
-					if (input.seen === undefined && input.flagged === undefined) throw new Error("Provide seen, flagged, or both");
-					return text(await mail.mark(input.accountId, input.folder, input.uid, { seen: input.seen, flagged: input.flagged }));
+					if (input.seen === undefined && input.flagged === undefined)
+						throw new Error("Provide seen, flagged, or both");
+					return text(
+						await mail.mark(input.accountId, input.folder, input.uid, {
+							seen: input.seen,
+							flagged: input.flagged,
+						}),
+					);
 				}),
 		);
 
@@ -764,15 +1000,35 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Move or file one message or a batch from one folder to another folder in the same account. Requires source folder, IMAP UID values, and exact targetFolder from email_list_folders. Side effect: moves messages out of the source folder. Use email_search_messages first if you do not know the IMAP UID; use email_archive_messages for archive and email_move_messages_to_trash for trash.",
 				inputSchema: {
 					...accountSelector,
-					folder: z.string().default("INBOX").describe("Exact IMAP folder path returned by email_list_folders; defaults to INBOX."),
-					uid: uidSchema.describe("One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers."),
-					targetFolder: z.string().describe("Exact destination IMAP folder path returned by email_list_folders."),
+					folder: z
+						.string()
+						.default("INBOX")
+						.describe(
+							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
+						),
+					uid: uidSchema.describe(
+						"One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers.",
+					),
+					targetFolder: z
+						.string()
+						.describe(
+							"Exact destination IMAP folder path returned by email_list_folders.",
+						),
 				},
 				outputSchema: { uid: uidSchema, from: z.string(), to: z.string() },
 				annotations: titled("Move Email", remoteMove),
 			},
 			(toolName) => async (input: any) =>
-				observeTool(toolName, async () => text(await mail.move(input.accountId, input.folder, input.uid, input.targetFolder))),
+				observeTool(toolName, async () =>
+					text(
+						await mail.move(
+							input.accountId,
+							input.folder,
+							input.uid,
+							input.targetFolder,
+						),
+					),
+				),
 		);
 
 		registerTools(
@@ -782,14 +1038,28 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Archive one message or a batch in one account without manually finding the archive folder. Requires folder and IMAP UID values from search/get/thread results. Side effect: moves messages to the account's IMAP Archive folder, or provider all-mail folder when that is the advertised archive destination. Use email_search_messages or email_list_all_inbox_messages first if you do not know the IMAP UID. Do not use to trash or permanently delete messages.",
 				inputSchema: {
 					...accountSelector,
-					folder: z.string().default("INBOX").describe("Exact IMAP folder path returned by email_list_folders; defaults to INBOX."),
-					uid: uidSchema.describe("One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers."),
+					folder: z
+						.string()
+						.default("INBOX")
+						.describe(
+							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
+						),
+					uid: uidSchema.describe(
+						"One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers.",
+					),
 				},
-				outputSchema: { uid: uidSchema, from: z.string(), to: z.string(), archived: z.boolean() },
+				outputSchema: {
+					uid: uidSchema,
+					from: z.string(),
+					to: z.string(),
+					archived: z.boolean(),
+				},
 				annotations: titled("Archive Email", remoteMove),
 			},
 			(toolName) => async (input: any) =>
-				observeTool(toolName, async () => text(await mail.archive(input.accountId, input.folder, input.uid))),
+				observeTool(toolName, async () =>
+					text(await mail.archive(input.accountId, input.folder, input.uid)),
+				),
 		);
 
 		registerTools(
@@ -799,14 +1069,28 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Move, trash, or delete-to-trash one message or a batch in one account. Requires folder and IMAP UID values from search/get/thread results. Side effect: moves messages to the account's IMAP Trash folder; this is normal deletion and not permanent deletion. Use email_delete_messages_permanently only when the user explicitly wants permanent deletion.",
 				inputSchema: {
 					...accountSelector,
-					folder: z.string().default("INBOX").describe("Exact IMAP folder path returned by email_list_folders; defaults to INBOX."),
-					uid: uidSchema.describe("One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers."),
+					folder: z
+						.string()
+						.default("INBOX")
+						.describe(
+							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
+						),
+					uid: uidSchema.describe(
+						"One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers.",
+					),
 				},
-				outputSchema: { uid: uidSchema, from: z.string(), to: z.string(), trashed: z.boolean() },
+				outputSchema: {
+					uid: uidSchema,
+					from: z.string(),
+					to: z.string(),
+					trashed: z.boolean(),
+				},
 				annotations: titled("Move Email to Trash", remoteMove),
 			},
 			(toolName) => async (input: any) =>
-				observeTool(toolName, async () => text(await mail.trash(input.accountId, input.folder, input.uid))),
+				observeTool(toolName, async () =>
+					text(await mail.trash(input.accountId, input.folder, input.uid)),
+				),
 		);
 
 		registerTools(
@@ -816,14 +1100,23 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Permanently delete, expunge, or remove one message or a batch from one account and folder. Requires folder and IMAP UID values from search/get/thread results. Dangerous side effect: marks messages deleted and expunges them; use email_move_messages_to_trash for normal deletion.",
 				inputSchema: {
 					...accountSelector,
-					folder: z.string().default("INBOX").describe("Exact IMAP folder path returned by email_list_folders; defaults to INBOX."),
-					uid: uidSchema.describe("One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers."),
+					folder: z
+						.string()
+						.default("INBOX")
+						.describe(
+							"Exact IMAP folder path returned by email_list_folders; defaults to INBOX.",
+						),
+					uid: uidSchema.describe(
+						"One IMAP UID or up to 100 IMAP UIDs returned by search/get/thread results; not Message-ID headers.",
+					),
 				},
 				outputSchema: { uid: uidSchema, deleted: z.boolean() },
 				annotations: titled("Delete Email", remoteDelete),
 			},
 			(toolName) => async (input: any) =>
-				observeTool(toolName, async () => text(await mail.delete(input.accountId, input.folder, input.uid))),
+				observeTool(toolName, async () =>
+					text(await mail.delete(input.accountId, input.folder, input.uid)),
+				),
 		);
 
 		registerTools(
@@ -833,19 +1126,34 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					"Compose, create, or prepare a new email draft or reply draft without sending it. For a reply, provide replyToMessage with the original folder and IMAP UID; for a new message, provide to, subject, and text or HTML. Side effect: creates a draft in the IMAP Drafts folder and returns draft folder, IMAP UID, and Message-ID. Do not use to send; use email_send_draft after reviewing or updating the draft.",
 				inputSchema: {
 					...accountSelector,
-					to: recipientSchema.optional().describe("Required for a new message; optional recipient override for a reply draft."),
-					cc: optionalRecipientSchema.optional().describe("Optional Cc recipient or recipients for the draft."),
-					bcc: optionalRecipientSchema.optional().describe("Optional Bcc recipient or recipients for the draft."),
+					to: recipientSchema
+						.optional()
+						.describe(
+							"Required for a new message; optional recipient override for a reply draft.",
+						),
+					cc: optionalRecipientSchema
+						.optional()
+						.describe("Optional Cc recipient or recipients for the draft."),
+					bcc: optionalRecipientSchema
+						.optional()
+						.describe("Optional Bcc recipient or recipients for the draft."),
 					replyTo: replyToSchema.optional(),
-					subject: z.string().optional().describe("Required for a new message; defaults to Re: original subject for a reply draft."),
+					subject: z
+						.string()
+						.optional()
+						.describe(
+							"Required for a new message; defaults to Re: original subject for a reply draft.",
+						),
 					text: z.string().optional().describe("Plain text body for the draft."),
 					html: z.string().optional().describe("HTML body for the draft."),
-					replyToMessage: z.object({
-						folder: z.string(),
-						uid: z.number().int().positive(),
-						replyAll: z.boolean().default(false),
-						quoteOriginal: z.boolean().default(true),
-					}).optional(),
+					replyToMessage: z
+						.object({
+							folder: z.string(),
+							uid: z.number().int().positive(),
+							replyAll: z.boolean().default(false),
+							quoteOriginal: z.boolean().default(true),
+						})
+						.optional(),
 					attachments: z.array(attachmentSchema).max(20).optional(),
 				},
 				outputSchema: draftLocationOutput,
@@ -853,9 +1161,14 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 			},
 			(toolName) => async (input: any) =>
 				observeTool(toolName, async () => {
-					if (!input.text && !input.html) throw new Error("Provide text or html message content");
-					if (!input.replyToMessage && !input.to) throw new Error("Provide to for a new message or replyToMessage for a reply");
-					if (!input.replyToMessage && input.subject === undefined) throw new Error("Provide subject for a new message");
+					if (!input.text && !input.html)
+						throw new Error("Provide text or html message content");
+					if (!input.replyToMessage && !input.to)
+						throw new Error(
+							"Provide to for a new message or replyToMessage for a reply",
+						);
+					if (!input.replyToMessage && input.subject === undefined)
+						throw new Error("Provide subject for a new message");
 					return text(await mail.createDraft(input));
 				}),
 		);
@@ -903,7 +1216,10 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 					html: z.string().optional(),
 					attachments: z.array(attachmentSchema).max(20).optional(),
 				},
-				outputSchema: { ...draftLocationOutput, replaced: z.object({ folder: z.string(), uid: z.number().int() }) },
+				outputSchema: {
+					...draftLocationOutput,
+					replaced: z.object({ folder: z.string(), uid: z.number().int() }),
+				},
 				annotations: titled("Edit Email Draft", remoteUpdate),
 			},
 			(toolName) => async (input: any) =>
@@ -935,8 +1251,11 @@ export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityP
 				},
 				annotations: titled("Send Email Draft", remoteSend),
 			},
-			(toolName) => async ({ accountId, folder, uid }: any) =>
-				observeTool(toolName, async () => text(await mail.sendDraft(accountId, folder, uid))),
+			(toolName) =>
+				async ({ accountId, folder, uid }: any) =>
+					observeTool(toolName, async () =>
+						text(await mail.sendDraft(accountId, folder, uid)),
+					),
 		);
 	}
 }

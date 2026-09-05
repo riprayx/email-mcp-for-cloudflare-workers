@@ -106,6 +106,10 @@ assert.equal(
 	undefined,
 	"ambiguous cloudflare:upload script must not exist",
 );
-assert.equal(packageJson.scripts.deploy, undefined, "ambiguous generic deploy script must not exist");
+assert.equal(
+	packageJson.scripts.deploy,
+	undefined,
+	"ambiguous generic deploy script must not exist",
+);
 
 console.log("Public configuration is sanitized.");

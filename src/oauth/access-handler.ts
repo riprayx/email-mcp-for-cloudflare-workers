@@ -184,10 +184,7 @@ async function handleCallback(request: Request, env: McpOAuthEnv): Promise<Respo
 
 async function verifyAccessIdToken(
 	idToken: string,
-	env: Pick<
-		McpOAuthEnv,
-		"ACCESS_JWKS_URL" | "ACCESS_AUTHORIZATION_URL" | "ACCESS_CLIENT_ID"
-	>,
+	env: Pick<McpOAuthEnv, "ACCESS_JWKS_URL" | "ACCESS_AUTHORIZATION_URL" | "ACCESS_CLIENT_ID">,
 ): Promise<AccessOidcClaims> {
 	if (!env.ACCESS_JWKS_URL.startsWith("https://"))
 		throw new OAuthError("server_error", "Access JWKS endpoint is not configured", 500);
@@ -206,7 +203,11 @@ async function verifyAccessIdToken(
 		!payload.email ||
 		!payload.sub
 	) {
-		throw new OAuthError("access_denied", "Access identity token is missing required claims", 403);
+		throw new OAuthError(
+			"access_denied",
+			"Access identity token is missing required claims",
+			403,
+		);
 	}
 	return {
 		email: payload.email,

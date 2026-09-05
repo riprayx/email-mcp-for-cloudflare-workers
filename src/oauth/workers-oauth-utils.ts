@@ -86,8 +86,7 @@ export function validateCSRFToken(formData: FormData, request: Request): Validat
 	if (tokenFromForm !== tokenFromCookie)
 		throw new OAuthError("invalid_request", "CSRF token mismatch");
 	return {
-		clearCookie:
-			"__Host-CSRF_TOKEN=; HttpOnly; Secure; Path=/; SameSite=Lax; Max-Age=0",
+		clearCookie: "__Host-CSRF_TOKEN=; HttpOnly; Secure; Path=/; SameSite=Lax; Max-Age=0",
 	};
 }
 
@@ -174,9 +173,7 @@ export function renderApprovalDialog(
 	const description = options.server.description
 		? `<p>${sanitizeText(options.server.description)}</p>`
 		: "";
-	const encodedState = bytesToBase64Url(
-		new TextEncoder().encode(JSON.stringify(options.state)),
-	);
+	const encodedState = bytesToBase64Url(new TextEncoder().encode(JSON.stringify(options.state)));
 	const action = sanitizeText(new URL(request.url).pathname);
 	const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Authorize ${serverName}</title></head>
@@ -185,7 +182,8 @@ export function renderApprovalDialog(
 	return new Response(html, {
 		headers: {
 			"Content-Type": "text/html; charset=utf-8",
-			"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
+			"Content-Security-Policy":
+				"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
 			"X-Frame-Options": "DENY",
 			"Referrer-Policy": "no-referrer",
 			"Set-Cookie": options.setCookie,
@@ -266,10 +264,7 @@ export async function fetchUpstreamAuthToken(params: {
 
 async function generatePKCE(): Promise<{ codeVerifier: string; codeChallenge: string }> {
 	const codeVerifier = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(32)));
-	const digest = await crypto.subtle.digest(
-		"SHA-256",
-		new TextEncoder().encode(codeVerifier),
-	);
+	const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(codeVerifier));
 	return { codeVerifier, codeChallenge: bytesToBase64Url(new Uint8Array(digest)) };
 }
 

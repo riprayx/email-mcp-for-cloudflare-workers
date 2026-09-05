@@ -5,7 +5,10 @@ import * as providers from "../src/mail/providers.ts";
 const { detectProvider, resolveProviderPreset } = providers;
 const usesMicrosoftOAuthRefresh = (
 	providers as typeof providers & {
-		usesMicrosoftOAuthRefresh?: (account: { provider?: string; imap: { host: string } }) => boolean;
+		usesMicrosoftOAuthRefresh?: (account: {
+			provider?: string;
+			imap: { host: string };
+		}) => boolean;
 	}
 ).usesMicrosoftOAuthRefresh;
 
@@ -54,10 +57,7 @@ test("Microsoft OAuth refresh policy trusts the actual Outlook IMAP host only", 
 		usesMicrosoftOAuthRefresh?.({ provider: "outlook", imap: { host: "mail.example.com" } }),
 		false,
 	);
-	assert.equal(
-		usesMicrosoftOAuthRefresh?.({ imap: { host: "outlook.office365.com" } }),
-		true,
-	);
+	assert.equal(usesMicrosoftOAuthRefresh?.({ imap: { host: "outlook.office365.com" } }), true);
 	assert.equal(
 		usesMicrosoftOAuthRefresh?.({ provider: "gmail", imap: { host: "OUTLOOK.OFFICE365.COM" } }),
 		true,

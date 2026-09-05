@@ -27,11 +27,13 @@
 ### Task 1: Separate the MCP agent from transport/authentication
 
 **Files:**
+
 - Create: `src/mcp-agent.ts`
 - Modify: `src/index.ts`
 - Test: `tests/mcp-agent.test.ts`
 
 **Interfaces:**
+
 - Consumes: existing `MailEnv`, `AccountStore`, `MailService`, provider resolution, observability, and permission helpers.
 - Produces: `export interface McpIdentityProps` and `export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityProps>` for both OAuth transport and Wrangler Durable Object bindings.
 
@@ -45,14 +47,14 @@ import test from "node:test";
 import { MyMCP, type McpIdentityProps } from "../src/mcp-agent.ts";
 
 test("MCP agent is transport-independent and accepts authenticated identity props", () => {
-  const identity: McpIdentityProps = {
-    accessToken: "upstream-token",
-    email: "user@example.com",
-    login: "subject-1",
-    name: "User",
-  };
-  assert.equal(typeof MyMCP, "function");
-  assert.equal(identity.email, "user@example.com");
+	const identity: McpIdentityProps = {
+		accessToken: "upstream-token",
+		email: "user@example.com",
+		login: "subject-1",
+		name: "User",
+	};
+	assert.equal(typeof MyMCP, "function");
+	assert.equal(identity.email, "user@example.com");
 });
 ```
 
@@ -72,16 +74,16 @@ Move the MCP schemas, annotations, helper functions, and complete `MyMCP` class 
 
 ```ts
 export interface McpIdentityProps {
-  accessToken: string;
-  email: string;
-  login: string;
-  name: string;
-  [key: string]: unknown;
+	accessToken: string;
+	email: string;
+	login: string;
+	name: string;
+	[key: string]: unknown;
 }
 
 export class MyMCP extends McpAgent<MailEnv, Record<string, never>, McpIdentityProps> {
-  server = new McpServer({ name: "email-mcp-server", version: "1.0.0" });
-  // existing init() and all 22 registered tools remain byte-for-byte equivalent in behavior
+	server = new McpServer({ name: "email-mcp-server", version: "1.0.0" });
+	// existing init() and all 22 registered tools remain byte-for-byte equivalent in behavior
 }
 ```
 
@@ -115,11 +117,13 @@ git commit -m "refactor: separate MCP agent from transport"
 ### Task 2: Isolate reusable Cloudflare Access JWT verification for the admin Worker
 
 **Files:**
+
 - Create: `src/access-jwt.ts`
 - Modify: `src/index.ts`
 - Test: `tests/access-jwt.test.ts`
 
 **Interfaces:**
+
 - Consumes: `TEAM_DOMAIN`, `POLICY_AUD`, JOSE `createRemoteJWKSet` and `jwtVerify`.
 - Produces: `verifyAccessJwt(token: string, env: AccessJwtEnv): Promise<AccessIdentity>` and `AccessIdentity { email, sub }`.
 
@@ -133,20 +137,24 @@ import test from "node:test";
 import { validateAccessJwtEnvironment } from "../src/access-jwt.ts";
 
 test("Access JWT configuration requires https team domain and audience", () => {
-  assert.doesNotThrow(() =>
-    validateAccessJwtEnvironment({
-      TEAM_DOMAIN: "https://team.cloudflareaccess.com",
-      POLICY_AUD: "audience",
-    }),
-  );
-  assert.throws(
-    () => validateAccessJwtEnvironment({ TEAM_DOMAIN: "http://bad", POLICY_AUD: "audience" }),
-    /Cloudflare Access is not configured/,
-  );
-  assert.throws(
-    () => validateAccessJwtEnvironment({ TEAM_DOMAIN: "https://team.cloudflareaccess.com", POLICY_AUD: "" }),
-    /Cloudflare Access is not configured/,
-  );
+	assert.doesNotThrow(() =>
+		validateAccessJwtEnvironment({
+			TEAM_DOMAIN: "https://team.cloudflareaccess.com",
+			POLICY_AUD: "audience",
+		}),
+	);
+	assert.throws(
+		() => validateAccessJwtEnvironment({ TEAM_DOMAIN: "http://bad", POLICY_AUD: "audience" }),
+		/Cloudflare Access is not configured/,
+	);
+	assert.throws(
+		() =>
+			validateAccessJwtEnvironment({
+				TEAM_DOMAIN: "https://team.cloudflareaccess.com",
+				POLICY_AUD: "",
+			}),
+		/Cloudflare Access is not configured/,
+	);
 });
 ```
 
@@ -166,40 +174,40 @@ Implement:
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 export interface AccessJwtEnv {
-  TEAM_DOMAIN: string;
-  POLICY_AUD: string;
+	TEAM_DOMAIN: string;
+	POLICY_AUD: string;
 }
 
 export interface AccessIdentity {
-  email: string;
-  sub: string;
+	email: string;
+	sub: string;
 }
 
 export function validateAccessJwtEnvironment(env: AccessJwtEnv): string {
-  const teamDomain = env.TEAM_DOMAIN.replace(/\/$/, "");
-  if (!teamDomain.startsWith("https://") || !env.POLICY_AUD) {
-    throw new Error("Cloudflare Access is not configured");
-  }
-  return teamDomain;
+	const teamDomain = env.TEAM_DOMAIN.replace(/\/$/, "");
+	if (!teamDomain.startsWith("https://") || !env.POLICY_AUD) {
+		throw new Error("Cloudflare Access is not configured");
+	}
+	return teamDomain;
 }
 
 let cachedTeamDomain: string | undefined;
 let cachedJwks: ReturnType<typeof createRemoteJWKSet> | undefined;
 
 export async function verifyAccessJwt(token: string, env: AccessJwtEnv): Promise<AccessIdentity> {
-  const teamDomain = validateAccessJwtEnvironment(env);
-  if (!cachedJwks || cachedTeamDomain !== teamDomain) {
-    cachedTeamDomain = teamDomain;
-    cachedJwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
-  }
-  const { payload } = await jwtVerify(token, cachedJwks, {
-    issuer: teamDomain,
-    audience: env.POLICY_AUD,
-  });
-  if (typeof payload.email !== "string" || typeof payload.sub !== "string") {
-    throw new Error("Cloudflare Access token is missing identity claims");
-  }
-  return { email: payload.email, sub: payload.sub };
+	const teamDomain = validateAccessJwtEnvironment(env);
+	if (!cachedJwks || cachedTeamDomain !== teamDomain) {
+		cachedTeamDomain = teamDomain;
+		cachedJwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
+	}
+	const { payload } = await jwtVerify(token, cachedJwks, {
+		issuer: teamDomain,
+		audience: env.POLICY_AUD,
+	});
+	if (typeof payload.email !== "string" || typeof payload.sub !== "string") {
+		throw new Error("Cloudflare Access token is missing identity claims");
+	}
+	return { email: payload.email, sub: payload.sub };
 }
 ```
 
@@ -226,12 +234,14 @@ git commit -m "refactor: isolate Access JWT verification"
 ### Task 3: Add Worker OAuth state, PKCE, CSRF, and upstream token helpers
 
 **Files:**
+
 - Create: `src/oauth/workers-oauth-utils.ts`
 - Create: `tests/workers-oauth-utils.test.ts`
 - Modify: `package.json`
 - Modify: `package-lock.json`
 
 **Interfaces:**
+
 - Consumes: `AuthRequest` and `ClientInfo` from `@cloudflare/workers-oauth-provider`, `KVNamespace`, Web Crypto.
 - Produces: `OAuthError`, `createOAuthState`, `validateOAuthState`, `generateCSRFProtection`, `validateCSRFToken`, `isClientApproved`, `addApprovedClient`, `renderApprovalDialog`, `getUpstreamAuthorizeUrl`, `fetchUpstreamAuthToken`, and `McpIdentityProps`-compatible upstream identity data.
 
@@ -253,35 +263,41 @@ Create `tests/workers-oauth-utils.test.ts` with tests for S256 PKCE URL construc
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  getUpstreamAuthorizeUrl,
-  generateCSRFProtection,
-  validateCSRFToken,
+	getUpstreamAuthorizeUrl,
+	generateCSRFProtection,
+	validateCSRFToken,
 } from "../src/oauth/workers-oauth-utils.ts";
 
 test("upstream authorization URL uses authorization code flow and S256 PKCE", () => {
-  const result = new URL(getUpstreamAuthorizeUrl({
-    upstream_url: "https://team.cloudflareaccess.com/authorize",
-    client_id: "client",
-    redirect_uri: "https://worker.example/callback",
-    scope: "openid email profile",
-    state: "signed-state",
-    code_challenge: "challenge",
-  }));
-  assert.equal(result.searchParams.get("response_type"), "code");
-  assert.equal(result.searchParams.get("code_challenge_method"), "S256");
-  assert.equal(result.searchParams.get("state"), "signed-state");
+	const result = new URL(
+		getUpstreamAuthorizeUrl({
+			upstream_url: "https://team.cloudflareaccess.com/authorize",
+			client_id: "client",
+			redirect_uri: "https://worker.example/callback",
+			scope: "openid email profile",
+			state: "signed-state",
+			code_challenge: "challenge",
+		}),
+	);
+	assert.equal(result.searchParams.get("response_type"), "code");
+	assert.equal(result.searchParams.get("code_challenge_method"), "S256");
+	assert.equal(result.searchParams.get("state"), "signed-state");
 });
 
 test("CSRF validation rejects mismatched form and cookie tokens", () => {
-  const { token } = generateCSRFProtection();
-  const form = new FormData();
-  form.set("csrf_token", token);
-  assert.throws(
-    () => validateCSRFToken(form, new Request("https://worker.example/authorize", {
-      headers: { Cookie: "__Host-CSRF_TOKEN=different" },
-    })),
-    /CSRF token mismatch/,
-  );
+	const { token } = generateCSRFProtection();
+	const form = new FormData();
+	form.set("csrf_token", token);
+	assert.throws(
+		() =>
+			validateCSRFToken(
+				form,
+				new Request("https://worker.example/authorize", {
+					headers: { Cookie: "__Host-CSRF_TOKEN=different" },
+				}),
+			),
+		/CSRF token mismatch/,
+	);
 });
 ```
 
@@ -302,7 +318,7 @@ const uuid = crypto.randomUUID();
 const hmac = await signData(uuid, secret);
 const stateToken = `${uuid}.${hmac}`;
 await kv.put(`oauth:state:${uuid}`, JSON.stringify({ oauthReqInfo, codeVerifier }), {
-  expirationTtl: 600,
+	expirationTtl: 600,
 });
 ```
 
@@ -329,12 +345,14 @@ git commit -m "feat: add MCP OAuth security helpers"
 ### Task 4: Implement Cloudflare Access for SaaS authorization handler and Worker-owned MCP OAuth entrypoint
 
 **Files:**
+
 - Create: `src/oauth/access-handler.ts`
 - Rewrite: `src/index.ts`
 - Modify: `src/mail/types.ts`
 - Test: `tests/mcp-oauth.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Env.OAUTH_PROVIDER` from `@cloudflare/workers-oauth-provider`, OAuth helper module, upstream Access OIDC endpoints/secrets, `MyMCP`.
 - Produces: `/authorize`, `/callback`, `/register`, `/token`, discovery endpoints, and bearer-protected `/mcp`.
 
@@ -348,13 +366,11 @@ import test from "node:test";
 import { assertApprovedIdentity } from "../src/oauth/access-handler.ts";
 
 test("only the configured Access identity can complete MCP authorization", () => {
-  assert.doesNotThrow(() =>
-    assertApprovedIdentity("riprayx@gmail.com", "riprayx@gmail.com"),
-  );
-  assert.throws(
-    () => assertApprovedIdentity("other@example.com", "riprayx@gmail.com"),
-    /not authorized/,
-  );
+	assert.doesNotThrow(() => assertApprovedIdentity("riprayx@gmail.com", "riprayx@gmail.com"));
+	assert.throws(
+		() => assertApprovedIdentity("other@example.com", "riprayx@gmail.com"),
+		/not authorized/,
+	);
 });
 ```
 
@@ -372,25 +388,25 @@ The handler must follow this route contract:
 
 ```ts
 if (request.method === "GET" && pathname === "/authorize") {
-  const oauthReqInfo = await env.OAUTH_PROVIDER.parseAuthRequest(request);
-  // render approval or reuse approved-client cookie
-  // create signed OAuth state + PKCE
-  // redirect to ACCESS_AUTHORIZATION_URL
+	const oauthReqInfo = await env.OAUTH_PROVIDER.parseAuthRequest(request);
+	// render approval or reuse approved-client cookie
+	// create signed OAuth state + PKCE
+	// redirect to ACCESS_AUTHORIZATION_URL
 }
 
 if (request.method === "POST" && pathname === "/authorize") {
-  // validate CSRF
-  // approve client cookie
-  // create signed OAuth state + PKCE
-  // redirect to Access for SaaS
+	// validate CSRF
+	// approve client cookie
+	// create signed OAuth state + PKCE
+	// redirect to Access for SaaS
 }
 
 if (request.method === "GET" && pathname === "/callback") {
-  // validate one-time state
-  // exchange upstream code using PKCE
-  // verify Access ID token with ACCESS_JWKS_URL
-  // require claims.email === env.ALLOWED_EMAIL
-  // env.OAUTH_PROVIDER.completeAuthorization(...)
+	// validate one-time state
+	// exchange upstream code using PKCE
+	// verify Access ID token with ACCESS_JWKS_URL
+	// require claims.email === env.ALLOWED_EMAIL
+	// env.OAUTH_PROVIDER.completeAuthorization(...)
 }
 ```
 
@@ -400,8 +416,8 @@ Use JOSE for the upstream ID token instead of hand-parsing signatures:
 const jwks = createRemoteJWKSet(new URL(env.ACCESS_JWKS_URL));
 const issuer = env.ACCESS_AUTHORIZATION_URL.replace(/\/authorization$/, "");
 const { payload } = await jwtVerify(idToken, jwks, {
-  issuer,
-  audience: env.ACCESS_CLIENT_ID,
+	issuer,
+	audience: env.ACCESS_CLIENT_ID,
 });
 ```
 
@@ -419,12 +435,12 @@ import { handleAccessRequest } from "./oauth/access-handler";
 export { MyMCP } from "./mcp-agent";
 
 export default new OAuthProvider({
-  apiHandler: MyMCP.serve("/mcp"),
-  apiRoute: "/mcp",
-  authorizeEndpoint: "/authorize",
-  clientRegistrationEndpoint: "/register",
-  defaultHandler: { fetch: handleAccessRequest as any },
-  tokenEndpoint: "/token",
+	apiHandler: MyMCP.serve("/mcp"),
+	apiRoute: "/mcp",
+	authorizeEndpoint: "/authorize",
+	clientRegistrationEndpoint: "/register",
+	defaultHandler: { fetch: handleAccessRequest as any },
+	tokenEndpoint: "/token",
 });
 ```
 
@@ -436,15 +452,15 @@ In `src/mail/types.ts`, add optional/required fields used at runtime without pla
 
 ```ts
 export interface MailEnv extends Cloudflare.Env {
-  MCP_PERMISSION_MODE?: string;
-  ALLOWED_EMAIL: string;
-  ACCESS_CLIENT_ID: string;
-  ACCESS_CLIENT_SECRET: string;
-  ACCESS_TOKEN_URL: string;
-  ACCESS_AUTHORIZATION_URL: string;
-  ACCESS_JWKS_URL: string;
-  COOKIE_ENCRYPTION_KEY: string;
-  OAUTH_KV: KVNamespace;
+	MCP_PERMISSION_MODE?: string;
+	ALLOWED_EMAIL: string;
+	ACCESS_CLIENT_ID: string;
+	ACCESS_CLIENT_SECRET: string;
+	ACCESS_TOKEN_URL: string;
+	ACCESS_AUTHORIZATION_URL: string;
+	ACCESS_JWKS_URL: string;
+	COOKIE_ENCRYPTION_KEY: string;
+	OAUTH_KV: KVNamespace;
 }
 ```
 
@@ -469,10 +485,12 @@ git commit -m "feat: serve MCP through Worker OAuth"
 ### Task 5: Create the dedicated Access-protected admin Worker entrypoint
 
 **Files:**
+
 - Create: `src/admin.ts`
 - Test: `tests/admin-entry.test.ts`
 
 **Interfaces:**
+
 - Consumes: existing `app`, `accessRejection`, `verifyAccessJwt`, and shared mailbox env.
 - Produces: browser-management handler only; `/mcp` is always `404` even after valid Access authentication.
 
@@ -486,25 +504,25 @@ import test from "node:test";
 import { createAdminHandler } from "../src/admin.ts";
 
 test("admin worker never exposes /mcp", async () => {
-  const handler = createAdminHandler({ verify: async () => ({ email: "u", sub: "s" }) });
-  const response = await handler.fetch(
-    new Request("https://admin.example/mcp", {
-      headers: { "Cf-Access-Jwt-Assertion": "valid" },
-    }),
-    { ACCESS_LOCAL_DEV: "false" } as any,
-    {} as ExecutionContext,
-  );
-  assert.equal(response.status, 404);
+	const handler = createAdminHandler({ verify: async () => ({ email: "u", sub: "s" }) });
+	const response = await handler.fetch(
+		new Request("https://admin.example/mcp", {
+			headers: { "Cf-Access-Jwt-Assertion": "valid" },
+		}),
+		{ ACCESS_LOCAL_DEV: "false" } as any,
+		{} as ExecutionContext,
+	);
+	assert.equal(response.status, 404);
 });
 
 test("admin worker rejects requests without Access assertion", async () => {
-  const handler = createAdminHandler({ verify: async () => ({ email: "u", sub: "s" }) });
-  const response = await handler.fetch(
-    new Request("https://admin.example/"),
-    { ACCESS_LOCAL_DEV: "false" } as any,
-    {} as ExecutionContext,
-  );
-  assert.equal(response.status, 401);
+	const handler = createAdminHandler({ verify: async () => ({ email: "u", sub: "s" }) });
+	const response = await handler.fetch(
+		new Request("https://admin.example/"),
+		{ ACCESS_LOCAL_DEV: "false" } as any,
+		{} as ExecutionContext,
+	);
+	assert.equal(response.status, 401);
 });
 ```
 
@@ -525,17 +543,19 @@ import app from "./app";
 import type { MailEnv } from "./mail/types";
 
 export function createAdminHandler(deps = { verify: verifyAccessJwt }) {
-  return {
-    async fetch(request: Request, env: MailEnv, ctx: ExecutionContext): Promise<Response> {
-      const rejection = await accessRejection(request, env, (token) => deps.verify(token, env));
-      if (rejection) return rejection;
-      const pathname = new URL(request.url).pathname;
-      if (pathname === "/mcp" || pathname.startsWith("/mcp/")) {
-        return new Response("Not Found", { status: 404 });
-      }
-      return app.fetch(request, env, ctx);
-    },
-  } satisfies ExportedHandler<MailEnv>;
+	return {
+		async fetch(request: Request, env: MailEnv, ctx: ExecutionContext): Promise<Response> {
+			const rejection = await accessRejection(request, env, (token) =>
+				deps.verify(token, env),
+			);
+			if (rejection) return rejection;
+			const pathname = new URL(request.url).pathname;
+			if (pathname === "/mcp" || pathname.startsWith("/mcp/")) {
+				return new Response("Not Found", { status: 404 });
+			}
+			return app.fetch(request, env, ctx);
+		},
+	} satisfies ExportedHandler<MailEnv>;
 }
 
 export default createAdminHandler();
@@ -562,6 +582,7 @@ git commit -m "feat: add isolated mailbox admin worker"
 ### Task 6: Generate separate private Wrangler configs for MCP and admin deployments
 
 **Files:**
+
 - Modify: `scripts/generate-cloudflare-config.mjs`
 - Modify: `tests/cloudflare-config.test.ts`
 - Modify: `package.json`
@@ -570,6 +591,7 @@ git commit -m "feat: add isolated mailbox admin worker"
 - Modify: `scripts/check-public-config.mjs`
 
 **Interfaces:**
+
 - Consumes: `EMAIL_KV_NAMESPACE_ID` for both Workers and `OAUTH_KV_NAMESPACE_ID` for the MCP Worker.
 - Produces: ignored `wrangler.mcp.generated.json` and `wrangler.admin.generated.json`.
 
@@ -579,21 +601,19 @@ The test must assert these exact boundaries:
 
 ```ts
 const configs = buildCloudflareConfigs({
-  EMAIL_KV_NAMESPACE_ID: "a".repeat(32),
-  OAUTH_KV_NAMESPACE_ID: "b".repeat(32),
+	EMAIL_KV_NAMESPACE_ID: "a".repeat(32),
+	OAUTH_KV_NAMESPACE_ID: "b".repeat(32),
 });
 
 assert.equal(configs.mcp.name, "email-mcp-server");
 assert.equal(configs.mcp.main, "src/index.ts");
 assert.deepEqual(configs.mcp.kv_namespaces, [
-  { binding: "EMAIL_KV", id: "a".repeat(32) },
-  { binding: "OAUTH_KV", id: "b".repeat(32) },
+	{ binding: "EMAIL_KV", id: "a".repeat(32) },
+	{ binding: "OAUTH_KV", id: "b".repeat(32) },
 ]);
 assert.equal(configs.admin.name, "email-mcp-admin");
 assert.equal(configs.admin.main, "src/admin.ts");
-assert.deepEqual(configs.admin.kv_namespaces, [
-  { binding: "EMAIL_KV", id: "a".repeat(32) },
-]);
+assert.deepEqual(configs.admin.kv_namespaces, [{ binding: "EMAIL_KV", id: "a".repeat(32) }]);
 assert.equal("durable_objects" in configs.admin, false);
 ```
 
@@ -601,27 +621,22 @@ MCP required secrets:
 
 ```ts
 [
-  "CREDENTIAL_ENCRYPTION_KEY",
-  "OUTLOOK_CLIENT_SECRET",
-  "ACCESS_CLIENT_ID",
-  "ACCESS_CLIENT_SECRET",
-  "ACCESS_TOKEN_URL",
-  "ACCESS_AUTHORIZATION_URL",
-  "ACCESS_JWKS_URL",
-  "COOKIE_ENCRYPTION_KEY",
-  "ALLOWED_EMAIL",
-]
+	"CREDENTIAL_ENCRYPTION_KEY",
+	"OUTLOOK_CLIENT_SECRET",
+	"ACCESS_CLIENT_ID",
+	"ACCESS_CLIENT_SECRET",
+	"ACCESS_TOKEN_URL",
+	"ACCESS_AUTHORIZATION_URL",
+	"ACCESS_JWKS_URL",
+	"COOKIE_ENCRYPTION_KEY",
+	"ALLOWED_EMAIL",
+];
 ```
 
 Admin required secrets:
 
 ```ts
-[
-  "CREDENTIAL_ENCRYPTION_KEY",
-  "OUTLOOK_CLIENT_SECRET",
-  "TEAM_DOMAIN",
-  "POLICY_AUD",
-]
+["CREDENTIAL_ENCRYPTION_KEY", "OUTLOOK_CLIENT_SECRET", "TEAM_DOMAIN", "POLICY_AUD"];
 ```
 
 - [ ] **Step 2: Run RED**
@@ -654,11 +669,11 @@ Add explicit scripts:
 
 ```json
 {
-  "cloudflare:config": "node scripts/generate-cloudflare-config.mjs",
-  "cloudflare:deploy:mcp": "npm run cloudflare:config && wrangler deploy --config wrangler.mcp.generated.json",
-  "cloudflare:deploy:admin": "npm run cloudflare:config && wrangler deploy --config wrangler.admin.generated.json",
-  "cloudflare:upload:mcp": "npm run cloudflare:config && wrangler versions upload --config wrangler.mcp.generated.json",
-  "cloudflare:upload:admin": "npm run cloudflare:config && wrangler versions upload --config wrangler.admin.generated.json"
+	"cloudflare:config": "node scripts/generate-cloudflare-config.mjs",
+	"cloudflare:deploy:mcp": "npm run cloudflare:config && wrangler deploy --config wrangler.mcp.generated.json",
+	"cloudflare:deploy:admin": "npm run cloudflare:config && wrangler deploy --config wrangler.admin.generated.json",
+	"cloudflare:upload:mcp": "npm run cloudflare:config && wrangler versions upload --config wrangler.mcp.generated.json",
+	"cloudflare:upload:admin": "npm run cloudflare:config && wrangler versions upload --config wrangler.admin.generated.json"
 }
 ```
 
@@ -707,11 +722,13 @@ git commit -m "feat: split MCP and admin deployment configs"
 ### Task 7: Update operator documentation and run the complete local verification gate
 
 **Files:**
+
 - Modify: `README.md`
 - Modify: `docs/UNIVERSAL_EMAIL.md`
 - Modify/regenerate: `worker-configuration.d.ts`
 
 **Interfaces:**
+
 - Produces: exact operator instructions for two Workers and a documented ChatGPT endpoint.
 
 - [ ] **Step 1: Update documentation**
@@ -761,6 +778,7 @@ git commit -m "docs: document split OAuth deployment"
 ### Task 8: Provision Cloudflare resources and deploy the admin Worker first
 
 **Cloudflare resources:**
+
 - Existing shared KV: `email-mcp-kv` / `40161c300478432c8d8741c79b315b8a`
 - Create: `email-mcp-oauth` KV namespace
 - Create/deploy: Worker `email-mcp-admin`
@@ -816,6 +834,7 @@ Do not continue if the existing accounts are missing; that would indicate wrong 
 ### Task 9: Create Access for SaaS OIDC upstream and deploy the OAuth-aware MCP Worker
 
 **Cloudflare resources:**
+
 - Create: Access for SaaS OIDC application `Email MCP OAuth Upstream`
 - Callback: `https://email-mcp-server.prayer777.workers.dev/callback`
 - Policy: allow only `riprayx@gmail.com`
@@ -826,17 +845,15 @@ Use the Cloudflare Access application API with this shape:
 
 ```json
 {
-  "name": "Email MCP OAuth Upstream",
-  "type": "saas",
-  "saas_app": {
-    "auth_type": "oidc",
-    "redirect_uris": [
-      "https://email-mcp-server.prayer777.workers.dev/callback"
-    ],
-    "grant_type": ["authorization_code", "refresh_tokens"],
-    "refresh_token_options": { "lifetime": "90d" }
-  },
-  "allowed_idps": []
+	"name": "Email MCP OAuth Upstream",
+	"type": "saas",
+	"saas_app": {
+		"auth_type": "oidc",
+		"redirect_uris": ["https://email-mcp-server.prayer777.workers.dev/callback"],
+		"grant_type": ["authorization_code", "refresh_tokens"],
+		"refresh_token_options": { "lifetime": "90d" }
+	},
+	"allowed_idps": []
 }
 ```
 
@@ -874,6 +891,7 @@ The MCP hostname must no longer be captured by the old self-hosted Access applic
 ### Task 10: Perform protocol-level and ChatGPT end-to-end verification before declaring success
 
 **Verification targets:**
+
 - OAuth discovery
 - DCR
 - authorization + PKCE

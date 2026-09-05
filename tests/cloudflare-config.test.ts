@@ -45,9 +45,7 @@ test("MCP and admin configs have separate security boundaries", () => {
 	assert.equal(configs.admin.main, "src/admin.ts");
 	assert.equal(configs.admin.keep_vars, true);
 	assert.equal("vars" in configs.admin, false);
-	assert.deepEqual(configs.admin.kv_namespaces, [
-		{ binding: "EMAIL_KV", id: emailNamespaceId },
-	]);
+	assert.deepEqual(configs.admin.kv_namespaces, [{ binding: "EMAIL_KV", id: emailNamespaceId }]);
 	assert.equal("durable_objects" in configs.admin, false);
 	assert.deepEqual(configs.admin.secrets.required, [
 		"CREDENTIAL_ENCRYPTION_KEY",

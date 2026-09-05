@@ -27,9 +27,9 @@ For a known provider, `email_add_account` only needs the account identity and cr
 
 ```json
 {
-  "name": "Personal 163",
-  "email": "user@163.com",
-  "password": "client-authorization-code"
+	"name": "Personal 163",
+	"email": "user@163.com",
+	"password": "client-authorization-code"
 }
 ```
 
@@ -61,11 +61,11 @@ The native IMAP/SMTP clients can authenticate with a supplied XOAUTH2 access tok
 
 `MCP_PERMISSION_MODE` controls which tools are registered with MCP clients.
 
-| Mode | Behavior |
-| --- | --- |
-| `read` | Read/search/status/attachments only |
+| Mode   | Behavior                                                          |
+| ------ | ----------------------------------------------------------------- |
+| `read` | Read/search/status/attachments only                               |
 | `mail` | Default. Read plus flags, move/archive/trash, drafts, and sending |
-| `full` | `mail` plus account add/remove and permanent deletion |
+| `full` | `mail` plus account add/remove and permanent deletion             |
 
 If the variable is omitted, the server defaults to `mail`.
 
