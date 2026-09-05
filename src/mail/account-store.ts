@@ -60,16 +60,19 @@ export async function migrateAccountStoreEncryption(
 export class AccountStore {
 	private kv: KVNamespace;
 	private encryptionKey: EncryptionKeySource;
+	private storageKey: string;
 
 	constructor(kv: KVNamespace, encryptionKey: EncryptionKeySource) {
 		this.kv = kv;
 		this.encryptionKey = encryptionKey;
+		this.storageKey =
+			typeof encryptionKey === "string" ? ACCOUNT_STORAGE_KEY_V1 : ACCOUNT_STORAGE_KEY_V2;
 	}
 
 	async list(): Promise<MailAccount[]> {
 		return readAccounts(
 			this.kv,
-			ACCOUNT_STORAGE_KEY_V1,
+			this.storageKey,
 			await resolveEncryptionKey(this.encryptionKey),
 		);
 	}
@@ -112,7 +115,7 @@ export class AccountStore {
 	private async save(accounts: MailAccount[]): Promise<void> {
 		await writeAccounts(
 			this.kv,
-			ACCOUNT_STORAGE_KEY_V1,
+			this.storageKey,
 			await resolveEncryptionKey(this.encryptionKey),
 			accounts,
 		);
