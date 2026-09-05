@@ -24,7 +24,6 @@ export interface McpOAuthEnv extends Cloudflare.Env {
 	OAUTH_KV: KVNamespace;
 	OAUTH_PROVIDER: OAuthHelpers;
 	ACCESS_CLIENT_ID: string;
-	ACCESS_CLIENT_SECRET: string;
 	ACCESS_AUTHORIZATION_URL: string;
 	ACCESS_TOKEN_URL: string;
 	ACCESS_JWKS_URL: string;
@@ -155,7 +154,6 @@ async function handleCallback(request: Request, env: McpOAuthEnv): Promise<Respo
 	const code = new URL(request.url).searchParams.get("code") ?? undefined;
 	const upstream = await fetchUpstreamAuthToken({
 		client_id: env.ACCESS_CLIENT_ID,
-		client_secret: env.ACCESS_CLIENT_SECRET,
 		code,
 		redirect_uri: new URL("/callback", request.url).href,
 		upstream_url: env.ACCESS_TOKEN_URL,
