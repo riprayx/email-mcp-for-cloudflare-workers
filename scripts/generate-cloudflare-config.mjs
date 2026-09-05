@@ -70,7 +70,6 @@ export function buildCloudflareConfigs(environment = process.env) {
 			required: [
 				"OUTLOOK_CLIENT_SECRET",
 				"ACCESS_CLIENT_ID",
-				"ACCESS_CLIENT_SECRET",
 				"ACCESS_TOKEN_URL",
 				"ACCESS_AUTHORIZATION_URL",
 				"ACCESS_JWKS_URL",
