@@ -158,14 +158,8 @@ export function requiresImapClientId(host: string): boolean {
 	return NETEASE_IMAP_HOSTS.has(host.trim().toLowerCase());
 }
 
-export function usesMicrosoftOAuthRefresh(account: {
-	provider?: string;
-	imap: { host: string };
-}): boolean {
-	return (
-		account.provider?.trim().toLowerCase() === "outlook" ||
-		account.imap.host.trim().toLowerCase() === "outlook.office365.com"
-	);
+export function usesMicrosoftOAuthRefresh(account: { imap: { host: string } }): boolean {
+	return account.imap.host.trim().toLowerCase() === "outlook.office365.com";
 }
 
 export function resolveAccountSettings(input: AccountSettingsInput): ResolvedAccountSettings {
