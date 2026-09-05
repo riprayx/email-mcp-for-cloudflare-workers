@@ -1,0 +1,41 @@
+name: Format migration Worker test
+
+on:
+  push:
+    branches: [feat/universal-email-mcp]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          ref: feat/universal-email-mcp
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Format test
+        run: |
+          npm ci
+          npx oxfmt --write tests/migration-worker.test.ts
+
+      - name: Commit formatting
+        run: |
+          if git diff --quiet -- tests/migration-worker.test.ts; then
+            echo "Migration Worker test already formatted"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/migration-worker.test.ts
+          git commit -m "style: format migration Worker test"
+          git push origin HEAD:feat/universal-email-mcp
