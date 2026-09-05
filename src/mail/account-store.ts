@@ -4,10 +4,13 @@ import { decrypt, encrypt } from "../crypto";
 const STORAGE_KEY = "mail/accounts/v1";
 
 export class AccountStore {
-	constructor(
-		private kv: KVNamespace,
-		private encryptionKey: string,
-	) {}
+	private kv: KVNamespace;
+	private encryptionKey: string;
+
+	constructor(kv: KVNamespace, encryptionKey: string) {
+		this.kv = kv;
+		this.encryptionKey = encryptionKey;
+	}
 
 	async list(): Promise<MailAccount[]> {
 		const encoded = await this.kv.get(STORAGE_KEY, "arrayBuffer");
