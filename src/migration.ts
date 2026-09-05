@@ -1,7 +1,4 @@
-import {
-	migrateAccountStoreEncryption,
-	type SecretTextBinding,
-} from "./mail/account-store.ts";
+import { migrateAccountStoreEncryption, type SecretTextBinding } from "./mail/account-store.ts";
 
 export const CREDENTIAL_MIGRATION_STATUS_KEY = "mail/migrations/credential-v2";
 
