@@ -179,7 +179,8 @@ dist
 .wrangler/
 .DS_Store
 wrangler.production.toml
-wrangler.generated.json
+wrangler.mcp.generated.json
+wrangler.admin.generated.json
 wrangler.*.toml
 !wrangler.toml
 
