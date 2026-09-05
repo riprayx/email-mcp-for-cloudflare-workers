@@ -51,7 +51,7 @@ bower_components
 
 .lock-wscript
 
-# Compiled binary addons (https://nodejs.org/api/addons.html)
+# Compiled binary addons (https://nodejs.org/api/addons)
 
 build/Release
 
@@ -179,7 +179,9 @@ dist
 .wrangler/
 .DS_Store
 wrangler.production.toml
-wrangler.generated.json
+wrangler.mcp.generated.json
+wrangler.admin.generated.json
+wrangler.migration.generated.json
 wrangler.*.toml
 !wrangler.toml
 

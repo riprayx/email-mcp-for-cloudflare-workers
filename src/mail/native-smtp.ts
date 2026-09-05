@@ -1,5 +1,6 @@
 import { connect } from "cloudflare:sockets";
-import type { MailAccount, ServerConfig } from "./types";
+import { classifySmtpDataFailure, SmtpResponseError } from "./smtp-errors";
+import { accountUsername, type MailAccount, type ServerConfig } from "./types";
 
 export { buildDraftMessage, type DraftInput } from "./mime";
 
@@ -43,7 +44,11 @@ export class NativeSmtpSession {
 			await this.command("DATA", [354]);
 			const outgoing = stripBcc(raw).trimEnd().replace(/^\./gm, "..");
 			await this.write(`${outgoing}\r\n.\r\n`);
-			await this.expect(undefined, [250]);
+			try {
+				await this.expect(undefined, [250]);
+			} catch (error) {
+				throw classifySmtpDataFailure(error);
+			}
 			return { messageId, accepted: recipients, rejected: [] as string[] };
 		} finally {
 			await this.quit();
@@ -95,13 +100,14 @@ export class NativeSmtpSession {
 	}
 
 	private async authenticate(): Promise<void> {
+		const username = accountUsername(this.account);
 		if (this.account.auth.type === "oauth2") {
-			const payload = `user=${this.account.email}\x01auth=Bearer ${this.account.auth.accessToken}\x01\x01`;
+			const payload = `user=${username}\x01auth=Bearer ${this.account.auth.accessToken}\x01\x01`;
 			await this.command(`AUTH XOAUTH2 ${btoa(payload)}`, [235]);
 			return;
 		}
 		await this.command("AUTH LOGIN", [334]);
-		await this.command(btoa(this.account.email), [334]);
+		await this.command(btoa(username), [334]);
 		await this.command(btoa(this.account.auth.password), [235]);
 	}
 
@@ -128,7 +134,8 @@ export class NativeSmtpSession {
 			if (match[2] === "-") continue;
 			const code = Number(match[1]);
 			if (!expected.includes(code))
-				throw new Error(
+				throw new SmtpResponseError(
+					code,
 					`SMTP ${command ?? "connection"} failed (${code}): ${line.slice(4, 300)}`,
 				);
 			return lines;

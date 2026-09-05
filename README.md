@@ -25,10 +25,11 @@ cp wrangler.toml wrangler.production.toml
 Never commit `wrangler.production.toml`, `.dev.vars`, private keys, certificates, Worker secrets,
 mailbox credentials, or OAuth client secrets.
 
-For repository-connected Cloudflare builds, do not commit or upload
-`wrangler.production.toml`. The build generates an ignored `wrangler.generated.json` containing
-the real KV binding while preserving the runtime variables and secrets already configured in the
-Cloudflare dashboard. See [Cloudflare repository builds](#cloudflare-repository-builds).
+For repository-connected Cloudflare builds, do not commit or upload private Wrangler
+configuration. The build generates two ignored files, `wrangler.mcp.generated.json` and
+`wrangler.admin.generated.json`, so the ChatGPT-facing MCP Worker and the Access-protected Admin
+Worker keep separate bindings and security boundaries. See
+[Production deployment](#production-deployment).
 
 ## Tools
 
@@ -42,73 +43,49 @@ Cloudflare dashboard. See [Cloudflare repository builds](#cloudflare-repository-
 Every tool publishes an MCP output schema and returns validated `structuredContent`. A JSON text
 copy is also returned for compatibility with clients that do not yet consume structured output.
 
-## Local setup
+## Local development
 
-Create `.dev.vars`:
-
-```dotenv
-CREDENTIAL_ENCRYPTION_KEY=base64-encoded-32-byte-key
-ACCESS_LOCAL_DEV=true
-```
-
-Generate the encryption key with:
+Install dependencies and run the verification suite with:
 
 ```bash
-openssl rand -base64 32
+npm ci
+npm test
 ```
 
-Then run:
+`.dev.vars.example` contains placeholders only. Copy it to the ignored `.dev.vars` when exercising
+Worker routes locally and provide your own encryption/OAuth values. End-to-end MCP OAuth also needs
+an `OAUTH_KV` binding and Cloudflare Access for SaaS/OIDC application values; never reuse production
+secrets in a public or shared development environment.
 
-```bash
-npm install
-npm run dev
+MCP tool calls emit structured operational events without logging tool arguments, mailbox
+credentials, provider tokens, upstream error text, or email content.
+
+## Authentication architecture
+
+Production is deliberately split into two Workers:
+
+```text
+MCP endpoint: https://email-mcp-server.<workers-subdomain>.workers.dev/mcp
+Admin UI:     https://email-mcp-admin.<workers-subdomain>.workers.dev/
 ```
 
-Connect an MCP client to `http://localhost:8787/mcp`.
+`email-mcp-server` owns the OAuth authorization server used by ChatGPT and other remote MCP
+clients. It uses `@cloudflare/workers-oauth-provider` for MCP OAuth discovery, dynamic client
+registration, S256 PKCE, access tokens, and refresh tokens. Cloudflare Access for SaaS/OIDC is the
+upstream human identity provider used during `/authorize`; the Worker additionally restricts the
+completed identity to the configured `ALLOWED_EMAIL`.
 
-`ACCESS_LOCAL_DEV` bypasses Access verification only when the request hostname is `localhost`,
-`127.0.0.1`, or `::1`. Never configure it as a production Worker variable or secret.
+Do not put the MCP Worker itself behind a normal self-hosted Access redirect. Unauthenticated MCP
+requests must be able to reach its protected-resource and authorization-server discovery endpoints
+and receive the OAuth `401 WWW-Authenticate` challenge.
 
-MCP tool calls emit structured events to Cloudflare Workers Logs with the tool name, status,
-duration, and a safe error category. Tool arguments, upstream error text, credentials, and email
-content are not logged.
-View production events under **Workers & Pages → email-mcp-server → Observability** or stream
-local/deployed events with `npx wrangler tail`.
+`email-mcp-admin` serves only the mailbox-management Web UI. Protect it with a Cloudflare Access
+self-hosted application restricted to the intended owner/identity group. The Admin Worker also
+validates the `Cf-Access-Jwt-Assertion` issuer and audience itself and does not expose `/mcp`.
 
-In VS Code, open **Run and Debug**, select **Email MCP: Local server**, and click Run (or
-press F5). Wrangler loads the same `.dev.vars` file automatically in the integrated terminal.
-
-## Cloudflare Access
-
-Production authentication is handled by a Cloudflare Access self-hosted application with
-Managed OAuth. The Worker also verifies every `Cf-Access-Jwt-Assertion` signature, issuer, and
-audience before routing a request.
-
-1. Deploy the Worker once to obtain its `*.workers.dev` hostname. Until Access is configured,
-   the placeholder issuer and audience make the Worker fail closed.
-2. In **Zero Trust → Access controls → Applications**, create a **Self-hosted and private**
-   application for the Worker hostname.
-3. Add an Allow policy restricted to your email or identity group. This server uses one shared
-   encrypted account store, so do not authorize unrelated users.
-4. Configure one-time PIN or an identity provider. Enable MFA at the identity provider or in
-   the Access policy where appropriate.
-5. Under the application's advanced settings, enable **Managed OAuth**. Configure only the
-   redirect URIs required by your MCP clients; enable localhost or loopback redirects only when
-   needed for local clients such as MCP Inspector.
-6. Copy the application **AUD** tag and your Zero Trust team domain into the ignored
-   `wrangler.production.toml`:
-
-```toml
-[vars]
-TEAM_DOMAIN = "https://your-team.cloudflareaccess.com"
-POLICY_AUD = "your-access-application-aud-tag"
-OUTLOOK_CLIENT_ID = "your-microsoft-entra-application-client-id"
-OUTLOOK_TENANT = "consumers"
-```
-
-See Cloudflare's [Secure MCP servers](https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/secure-mcp-servers/)
-and [Managed OAuth](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/managed-oauth/)
-guides for the current dashboard and redirect-URI configuration.
+Both Workers share `EMAIL_KV` and the same `CREDENTIAL_ENCRYPTION_KEY`. `OAUTH_KV` belongs only to
+the MCP Worker. Mailbox credentials entered in the Admin UI therefore go browser → Admin Worker →
+encrypted `EMAIL_KV`, without passing through ChatGPT or another MCP client.
 
 ## Microsoft Entra app registration for Outlook
 
@@ -188,62 +165,48 @@ application](https://learn.microsoft.com/en-us/entra/identity-platform/quickstar
 and [OAuth for IMAP and
 SMTP](https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth).
 
-## Production secret and deployment
+## Production deployment
 
-Create and fill `wrangler.production.toml` as described above. The public example intentionally
-cannot be deployed until its placeholder KV namespace and Access values are replaced.
-
-For an existing deployment, first confirm the required secrets are present:
+Generate the two private Wrangler configurations from build-time namespace IDs:
 
 ```bash
-npx wrangler secret list --config wrangler.production.toml
+EMAIL_KV_NAMESPACE_ID=<32-hex-id> \
+OAUTH_KV_NAMESPACE_ID=<32-hex-id> \
+npm run cloudflare:config
 ```
 
-Do not replace an existing `CREDENTIAL_ENCRYPTION_KEY`; existing encrypted account records depend
-on it. For a brand-new deployment with no stored accounts, generate and install the key without
-writing it to disk:
+The generated files are owner-readable only and ignored by Git:
+
+```text
+wrangler.mcp.generated.json
+wrangler.admin.generated.json
+```
+
+The MCP Worker binds `EMAIL_KV`, `OAUTH_KV`, and the `MyMCP` Durable Object. Configure its runtime
+secrets/variables for `CREDENTIAL_ENCRYPTION_KEY`, `OUTLOOK_CLIENT_SECRET`,
+`ACCESS_CLIENT_ID`, `ACCESS_CLIENT_SECRET`, `ACCESS_AUTHORIZATION_URL`, `ACCESS_TOKEN_URL`,
+`ACCESS_JWKS_URL`, `COOKIE_ENCRYPTION_KEY`, and `ALLOWED_EMAIL`.
+
+The Admin Worker binds only `EMAIL_KV`. Configure the same `CREDENTIAL_ENCRYPTION_KEY`, the mailbox
+provider secrets it needs, plus `TEAM_DOMAIN` and `POLICY_AUD` from its self-hosted Cloudflare
+Access application. Replacing the encryption key on either Worker will make existing encrypted
+mailbox records unreadable.
+
+Deploy explicitly so there is no ambiguous target:
 
 ```bash
-CREDENTIAL_ENCRYPTION_KEY="$(openssl rand -base64 32)"
-printf '%s' "$CREDENTIAL_ENCRYPTION_KEY" | npx wrangler secret put CREDENTIAL_ENCRYPTION_KEY --config wrangler.production.toml
-unset CREDENTIAL_ENCRYPTION_KEY
+npm run cloudflare:deploy:mcp
+npm run cloudflare:deploy:admin
 ```
 
-Deploy after updating the Access variables:
+Repository-connected Cloudflare builds should store `EMAIL_KV_NAMESPACE_ID` and
+`OAUTH_KV_NAMESPACE_ID` as encrypted build variables. Keep all runtime OAuth credentials,
+Access values, mailbox-provider secrets, allowed identities, and encryption keys in Cloudflare
+Variables and Secrets rather than source control.
 
-```bash
-npm run deploy
-```
-
-The production MCP endpoint is `https://<worker>.<subdomain>.workers.dev/mcp`.
-
-Open `https://<worker>.<subdomain>.workers.dev/` to manage email accounts through the
-Access-protected web interface. Credentials submitted there go directly from the browser to the
-Worker and do not pass through an MCP client or language model.
-
-## Cloudflare repository builds
-
-Cloudflare only receives files committed to the connected Git repository, so it cannot read the
-ignored local `wrangler.production.toml`. Configure the existing Worker as follows:
-
-1. Keep these runtime values under **Settings → Variables and Secrets**:
-    - Plaintext: `OUTLOOK_CLIENT_ID`, `OUTLOOK_TENANT`, `POLICY_AUD`, and `TEAM_DOMAIN`.
-    - Secret: `CREDENTIAL_ENCRYPTION_KEY` and `OUTLOOK_CLIENT_SECRET`.
-2. Under **Settings → Build → Variables and Secrets**, add a build environment variable named
-   `EMAIL_KV_NAMESPACE_ID`, set it to the existing `EMAIL_KV` namespace ID, and enable
-   **Encrypt**. Runtime variables from step 1 are not available to repository build commands.
-3. Set the deploy command to `npm run cloudflare:upload` for the first verification build. This
-   creates a version without promoting it to the active deployment.
-4. After verifying the uploaded version, change the deploy command to
-   `npm run cloudflare:deploy` to deploy successful `main` builds automatically.
-
-The repository includes `.node-version`, so Cloudflare uses the supported Node version without a
-separate build variable. The generated configuration sets `keep_vars: true`, omits `vars`, and
-declares the required secret names without supplying or replacing their values. It is written
-with owner-only file permissions and ignored by Git.
-
-Do not replace `CREDENTIAL_ENCRYPTION_KEY` on an existing deployment. Existing encrypted account
-records can only be read with the key that encrypted them.
+The default `MCP_PERMISSION_MODE=mail` exposes reading, organization, drafts, and sending while
+excluding mailbox account administration and permanent deletion. Use the Admin UI for account
+setup instead of broadening MCP permissions unless `full` is intentionally required.
 
 ## Account settings
 

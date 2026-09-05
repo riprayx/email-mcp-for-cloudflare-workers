@@ -23,9 +23,12 @@
 	"type": "module",
 	"scripts": {
 		"cloudflare:config": "node scripts/generate-cloudflare-config.mjs",
-		"cloudflare:deploy": "npm run cloudflare:config && wrangler deploy --config wrangler.generated.json",
-		"cloudflare:upload": "npm run cloudflare:config && wrangler versions upload --config wrangler.generated.json",
-		"deploy": "wrangler deploy --config wrangler.production.toml",
+		"cloudflare:deploy:mcp": "npm run cloudflare:config && wrangler deploy --config wrangler.mcp.generated.json",
+		"cloudflare:deploy:admin": "npm run cloudflare:config && wrangler deploy --config wrangler.admin.generated.json",
+		"cloudflare:deploy:migration": "npm run cloudflare:config && wrangler deploy --config wrangler.migration.generated.json",
+		"cloudflare:upload:mcp": "npm run cloudflare:config && wrangler versions upload --config wrangler.mcp.generated.json",
+		"cloudflare:upload:admin": "npm run cloudflare:config && wrangler versions upload --config wrangler.admin.generated.json",
+		"cloudflare:upload:migration": "npm run cloudflare:config && wrangler versions upload --config wrangler.migration.generated.json",
 		"dev": "wrangler dev",
 		"format": "oxfmt --write .",
 		"format:check": "oxfmt --check .",
@@ -39,11 +42,12 @@
 		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@cloudflare/workers-oauth-provider": "0.10.3",
 		"@modelcontextprotocol/sdk": "^1.29.0",
 		"agents": "^0.19.0",
 		"hono": "^4.12.32",
 		"jose": "^6.2.4",
-		"mailparser": "^3.9.14",
+		"mailparser": "^3.9.19",
 		"zod": "^4.4.3"
 	},
 	"devDependencies": {

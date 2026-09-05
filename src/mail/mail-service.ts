@@ -2,9 +2,10 @@ import { simpleParser, type AddressObject, type ParsedMail } from "mailparser";
 import { Buffer } from "node:buffer";
 import { safeErrorCategory } from "../observability";
 import type { AccountStore } from "./account-store";
-import type { MailAccount } from "./types";
 import { NativeImapSession } from "./native-imap";
 import { buildDraftMessage, NativeSmtpSession, type DraftInput } from "./native-smtp";
+import { usesMicrosoftOAuthRefresh } from "./providers";
+import type { MailAccount } from "./types";
 
 interface CreateDraftInput extends Omit<DraftInput, "to" | "subject"> {
 	accountId?: string;
@@ -591,7 +592,12 @@ export class MailService {
 
 	private async authorizedAccount(accountId?: string): Promise<MailAccount> {
 		const account = await this.store.get(accountId);
-		if (account.auth.type !== "oauth2" || !account.auth.refreshToken || !account.auth.clientId)
+		if (
+			account.auth.type !== "oauth2" ||
+			!usesMicrosoftOAuthRefresh(account) ||
+			!account.auth.refreshToken ||
+			!account.auth.clientId
+		)
 			return account;
 		if (account.auth.expiresAt && account.auth.expiresAt > Date.now() + 60_000) return account;
 		const endpoint = `https://login.microsoftonline.com/${account.auth.tenant ?? "consumers"}/oauth2/v2.0/token`;
