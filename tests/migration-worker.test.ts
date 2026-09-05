@@ -24,10 +24,18 @@ test("migration Worker preserves Access and existing HTTP routing", async () => 
 	assert.equal(unauthorized.status, 401);
 
 	const headers = { "Cf-Access-Jwt-Assertion": "valid" };
-	const mcp = await handler.fetch(new Request("https://worker.example/mcp", { headers }), env, ctx);
+	const mcp = await handler.fetch(
+		new Request("https://worker.example/mcp", { headers }),
+		env,
+		ctx,
+	);
 	assert.equal(await mcp.text(), "mcp");
 
-	const admin = await handler.fetch(new Request("https://worker.example/", { headers }), env, ctx);
+	const admin = await handler.fetch(
+		new Request("https://worker.example/", { headers }),
+		env,
+		ctx,
+	);
 	assert.equal(await admin.text(), "admin");
 });
 
