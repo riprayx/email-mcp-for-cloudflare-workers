@@ -49,11 +49,13 @@ NetEase IMAP servers require RFC 2971 client identification on affected mailboxe
 
 This behavior is based on the actual IMAP host, not the stored provider name. A NetEase account entered through the Web UI as Custom therefore receives the same compatibility handshake when its IMAP host is `imap.163.com`, `imap.126.com`, `imap.yeah.net`, or one of the supported NetEase VIP/188 hosts.
 
-## Credentials
+## Credentials and OAuth
 
 Credentials are encrypted with the existing AES-256-GCM account store before being written to Workers KV. Do not put mailbox passwords, app passwords, authorization codes, OAuth tokens, or `CREDENTIAL_ENCRYPTION_KEY` in Git.
 
 For NetEase and QQ Mail, use the provider-issued client authorization code rather than the normal web-login password where the provider requires it.
+
+The native IMAP/SMTP clients can authenticate with a supplied XOAUTH2 access token. Automatic refresh is currently implemented only for Outlook/Microsoft accounts. Microsoft refresh is selected only for the Outlook provider or the legacy `outlook.office365.com` IMAP host, so Gmail or custom OAuth credentials are never sent to the Microsoft token endpoint. For non-Outlook providers, supply a currently valid access token or use the provider's app-password/authorization-code flow until provider-specific OAuth onboarding and refresh support is implemented.
 
 ## MCP permission modes
 
