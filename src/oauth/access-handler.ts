@@ -56,13 +56,13 @@ export async function handleAccessRequest(
 	const url = new URL(request.url);
 	try {
 		if (request.method === "GET" && url.pathname === "/authorize") {
-			return handleAuthorizeGet(request, env);
+			return await handleAuthorizeGet(request, env);
 		}
 		if (request.method === "POST" && url.pathname === "/authorize") {
-			return handleAuthorizePost(request, env);
+			return await handleAuthorizePost(request, env);
 		}
 		if (request.method === "GET" && url.pathname === "/callback") {
-			return handleCallback(request, env);
+			return await handleCallback(request, env);
 		}
 		return new Response("Not Found", { status: 404 });
 	} catch (error) {
