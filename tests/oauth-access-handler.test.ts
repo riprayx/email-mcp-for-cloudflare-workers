@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-	handleAccessRequest,
-	type McpOAuthEnv,
-} from "../src/oauth/access-handler.ts";
+import { handleAccessRequest, type McpOAuthEnv } from "../src/oauth/access-handler.ts";
 
 function executionContext(): ExecutionContext {
 	return {} as ExecutionContext;
@@ -20,11 +17,7 @@ test("async OAuth errors are converted to protocol responses", async () => {
 		body: form,
 	});
 
-	const response = await handleAccessRequest(
-		request,
-		{} as McpOAuthEnv,
-		executionContext(),
-	);
+	const response = await handleAccessRequest(request, {} as McpOAuthEnv, executionContext());
 
 	assert.equal(response.status, 400);
 	assert.deepEqual(await response.json(), {
