@@ -45,7 +45,7 @@ If the authentication username differs from the mailbox address, set `username`.
 
 ## NetEase IMAP compatibility
 
-NetEase IMAP servers require RFC 2971 client identification on affected mailboxes before selecting folders. The Worker automatically sends an `ID` command after authentication for the built-in NetEase IMAP hosts.
+NetEase IMAP servers require RFC 2971 client identification on affected mailboxes before selecting folders. The Worker automatically sends an `ID` command after authentication for the built-in NetEase IMAP hosts when the server advertises the `ID` capability.
 
 This behavior is based on the actual IMAP host, not the stored provider name. A NetEase account entered through the Web UI as Custom therefore receives the same compatibility handshake when its IMAP host is `imap.163.com`, `imap.126.com`, `imap.yeah.net`, or one of the supported NetEase VIP/188 hosts.
 
@@ -92,3 +92,4 @@ TLS behavior follows the existing transport model:
 - Permanent expunge is available only in `full` mode.
 - The default `mail` mode intentionally hides account administration and permanent deletion from MCP clients.
 - SMTP acceptance means the upstream SMTP server accepted the message for processing; it does not prove final delivery to the recipient inbox.
+- If the connection fails after the SMTP DATA payload was transmitted but before the final server response is known, the send fails with an explicit unknown-delivery-state error. Do not retry automatically. The draft is preserved and no Sent copy is appended by this send attempt.
