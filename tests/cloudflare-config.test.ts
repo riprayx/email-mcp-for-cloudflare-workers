@@ -64,7 +64,7 @@ test("MCP, admin, and migration configs have separate security boundaries", () =
 	]);
 
 	assert.equal(configs.migration.name, "email-mcp-server");
-	assert.equal(configs.migration.main, "src/migrate.ts");
+	assert.equal(configs.migration.main, "src/migrate-entry.ts");
 	assert.equal(configs.migration.keep_vars, true);
 	assert.deepEqual(configs.migration.kv_namespaces, [
 		{ binding: "EMAIL_KV", id: emailNamespaceId },
