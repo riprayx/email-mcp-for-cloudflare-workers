@@ -36,15 +36,34 @@ function memoryKv(initial: Record<string, ArrayBuffer> = {}) {
 	};
 }
 
-test("AccountStore resolves a Secrets Store binding before decrypting account data", async () => {
-	const encrypted = await encrypt(new TextEncoder().encode(JSON.stringify(accounts)), newKey);
-	const kv = memoryKv({ "mail/accounts/v1": encrypted, "mail/accounts/v2": encrypted });
-	const store = new accountStoreModule.AccountStore(
+test("Secrets Store-backed AccountStore reads and writes v2 while legacy strings stay on v1", async () => {
+	const v1Accounts = [{ ...accounts[0], name: "Legacy" }];
+	const v1 = await encrypt(new TextEncoder().encode(JSON.stringify(v1Accounts)), oldKey);
+	const v2 = await encrypt(new TextEncoder().encode(JSON.stringify(accounts)), newKey);
+	const kv = memoryKv({ "mail/accounts/v1": v1, "mail/accounts/v2": v2 });
+	const originalV1 = Buffer.from(v1);
+
+	const legacyStore = new accountStoreModule.AccountStore(kv as unknown as KVNamespace, oldKey);
+	assert.deepEqual(await legacyStore.list(), v1Accounts);
+
+	const secretsStore = new accountStoreModule.AccountStore(
 		kv as unknown as KVNamespace,
 		secretBinding(newKey) as any,
 	);
+	assert.deepEqual(await secretsStore.list(), accounts);
 
-	assert.deepEqual(await store.list(), accounts);
+	await secretsStore.add({
+		name: "Second",
+		email: "second@example.com",
+		imap: { host: "imap.example.com", port: 993, secure: true },
+		auth: { type: "password", password: "second-password" },
+	});
+
+	assert.deepEqual(Buffer.from(kv.values.get("mail/accounts/v1")!), originalV1);
+	const updatedV2 = kv.values.get("mail/accounts/v2");
+	assert.ok(updatedV2);
+	const plaintext = await decrypt(updatedV2, newKey);
+	assert.equal(JSON.parse(new TextDecoder().decode(plaintext)).length, 2);
 });
 
 test("account encryption migration preserves v1 and verifies a new v2 copy", async () => {
