@@ -159,10 +159,11 @@ export function requiresImapClientId(host: string): boolean {
 }
 
 export function resolveAccountSettings(input: AccountSettingsInput): ResolvedAccountSettings {
-	const explicit = input.provider ? resolveProviderPreset(input.provider) : undefined;
-	if (input.provider && input.provider !== "custom" && !explicit)
-		throw new Error(`Unknown email provider: ${input.provider}`);
-	const preset = input.provider === "custom" ? undefined : explicit ?? detectProvider(input.email);
+	const providerId = input.provider?.trim().toLowerCase();
+	const explicit = providerId ? resolveProviderPreset(providerId) : undefined;
+	if (providerId && providerId !== "custom" && !explicit)
+		throw new Error(`Unknown email provider: ${providerId}`);
+	const preset = providerId === "custom" ? undefined : explicit ?? detectProvider(input.email);
 
 	const imapHost = input.imap?.host ?? preset?.imap.host;
 	if (!imapHost) throw new Error("IMAP host is required for custom email providers");
