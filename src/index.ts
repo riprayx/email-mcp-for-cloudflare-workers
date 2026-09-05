@@ -11,6 +11,7 @@ export default new OAuthProvider<McpOAuthEnv>({
 	authorizeEndpoint: "/authorize",
 	tokenEndpoint: "/token",
 	clientRegistrationEndpoint: "/register",
+	scopesSupported: ["offline_access"],
 	accessTokenTTL: 15 * 60,
 	refreshTokenTTL: 90 * 24 * 60 * 60,
 	clientRegistrationTTL: 90 * 24 * 60 * 60,
