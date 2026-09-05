@@ -137,9 +137,9 @@ export class MyMCP extends McpAgent<MailEnv> {
 			clientSecret: env.OUTLOOK_CLIENT_SECRET,
 		});
 		const permissionMode = parsePermissionMode(env.MCP_PERMISSION_MODE);
-		const registerTool = (name: string, config: any, handler: any) => {
+		const registerTool = ((name: string, config: any, handler: any) => {
 			if (toolAllowed(permissionMode, name)) this.server.registerTool(name, config, handler);
-		};
+		}) as McpServer["registerTool"];
 		const registerTools = (
 			names: string[],
 			config: any,
@@ -386,7 +386,7 @@ export class MyMCP extends McpAgent<MailEnv> {
 			"email_list_folders",
 			{
 				description:
-					"List, show, or lookup exact IMAP folder paths and special-use flags for one configured account. Returns folder path, display name, and flags. Use before status, search, move, trash, or delete when the exact folder is not known; does not return message summaries or message contents.",
+					"List, show, or lookup exact IMAP folder paths and special-use flags for one configured account. Returns folder path, display name, and flags. Use before status, search, move, trash, or delete when the exact folder path is not known; does not return message summaries or message contents.",
 				inputSchema: accountSelector,
 				outputSchema: {
 					folders: z.array(
