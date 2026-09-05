@@ -405,7 +405,7 @@ export class MailService {
 			};
 		} else {
 			if (!input.to) throw new Error("Provide to or replyToMessage");
-			if (input.subject === undefined) throw new Error("Provide subject for a new message");
+			if (input.subject === undefined) throw new Error("Provide subject for a new draft");
 			draftInput = { ...input, to: input.to, subject: input.subject };
 		}
 		const draft = buildDraftMessage(account.email, draftInput);
