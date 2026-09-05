@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { detectProvider, resolveProviderPreset } from "../src/mail/providers.ts";
+import * as providers from "../src/mail/providers.ts";
+
+const { detectProvider, resolveProviderPreset } = providers;
+const usesMicrosoftOAuthRefresh = (
+	providers as typeof providers & {
+		usesMicrosoftOAuthRefresh?: (account: { provider?: string; imap: { host: string } }) => boolean;
+	}
+).usesMicrosoftOAuthRefresh;
 
 test("detects NetEase 163 from email domain", () => {
 	assert.equal(detectProvider("user@163.com")?.id, "netease-163");
@@ -35,4 +42,20 @@ test("includes Zoho preset", () => {
 
 test("unknown domains do not invent provider settings", () => {
 	assert.equal(detectProvider("user@example.com"), undefined);
+});
+
+test("Microsoft OAuth refresh policy is limited to Outlook accounts", () => {
+	assert.equal(typeof usesMicrosoftOAuthRefresh, "function");
+	assert.equal(
+		usesMicrosoftOAuthRefresh?.({ provider: "gmail", imap: { host: "imap.gmail.com" } }),
+		false,
+	);
+	assert.equal(
+		usesMicrosoftOAuthRefresh?.({ provider: "outlook", imap: { host: "mail.example.com" } }),
+		true,
+	);
+	assert.equal(
+		usesMicrosoftOAuthRefresh?.({ imap: { host: "outlook.office365.com" } }),
+		true,
+	);
 });
