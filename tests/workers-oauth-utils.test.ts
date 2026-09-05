@@ -75,8 +75,9 @@ test("OAuth state is signed, checked before KV lookup, and consumed once", async
 	const { stateToken, codeChallenge } = await createOAuthState(authRequest, store.kv, secret);
 
 	assert.match(codeChallenge, /^[A-Za-z0-9_-]{43}$/);
-	const finalCharacter = stateToken.at(-1);
-	const tamperedState = `${stateToken.slice(0, -1)}${finalCharacter === "A" ? "B" : "A"}`;
+	const separator = stateToken.lastIndexOf(".");
+	const signatureFirstCharacter = stateToken[separator + 1];
+	const tamperedState = `${stateToken.slice(0, separator + 1)}${signatureFirstCharacter === "A" ? "B" : "A"}${stateToken.slice(separator + 2)}`;
 	await assert.rejects(
 		validateOAuthState(
 			new Request(`https://worker.example/callback?state=${encodeURIComponent(tamperedState)}`),
