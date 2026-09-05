@@ -31,7 +31,25 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "TEAM_DOMAIN" | "POLICY_AUD" | "CREDENTIAL_ENCRYPTION_KEY" | "ACCESS_LOCAL_DEV" | "OUTLOOK_CLIENT_ID" | "OUTLOOK_CLIENT_SECRET" | "OUTLOOK_TENANT" | "ACCESS_CLIENT_ID" | "ACCESS_CLIENT_SECRET" | "ACCESS_TOKEN_URL" | "ACCESS_AUTHORIZATION_URL" | "ACCESS_JWKS_URL" | "COOKIE_ENCRYPTION_KEY" | "ALLOWED_EMAIL">> {}
+	interface ProcessEnv extends StringifyValues<
+		Pick<
+			Cloudflare.Env,
+			| "TEAM_DOMAIN"
+			| "POLICY_AUD"
+			| "CREDENTIAL_ENCRYPTION_KEY"
+			| "ACCESS_LOCAL_DEV"
+			| "OUTLOOK_CLIENT_ID"
+			| "OUTLOOK_CLIENT_SECRET"
+			| "OUTLOOK_TENANT"
+			| "ACCESS_CLIENT_ID"
+			| "ACCESS_CLIENT_SECRET"
+			| "ACCESS_TOKEN_URL"
+			| "ACCESS_AUTHORIZATION_URL"
+			| "ACCESS_JWKS_URL"
+			| "COOKIE_ENCRYPTION_KEY"
+			| "ALLOWED_EMAIL"
+		>
+	> {}
 }
 
 // Begin runtime types
