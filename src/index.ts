@@ -1,35 +1,10 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
 import { accessRejection } from "./access";
+import { verifyAccessJwt } from "./access-jwt";
 import app from "./app";
 import type { MailEnv } from "./mail/types";
 import { MyMCP } from "./mcp-agent";
 
 export { MyMCP } from "./mcp-agent";
-
-interface AccessIdentity {
-	email: string;
-	sub: string;
-}
-
-let cachedTeamDomain: string | undefined;
-let cachedJwks: ReturnType<typeof createRemoteJWKSet> | undefined;
-
-async function verifyAccessJwt(token: string, env: MailEnv): Promise<AccessIdentity> {
-	const teamDomain = env.TEAM_DOMAIN.replace(/\/$/, "");
-	if (!teamDomain.startsWith("https://") || !env.POLICY_AUD)
-		throw new Error("Cloudflare Access is not configured");
-	if (!cachedJwks || cachedTeamDomain !== teamDomain) {
-		cachedTeamDomain = teamDomain;
-		cachedJwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
-	}
-	const { payload } = await jwtVerify(token, cachedJwks, {
-		issuer: teamDomain,
-		audience: env.POLICY_AUD,
-	});
-	if (typeof payload.email !== "string" || typeof payload.sub !== "string")
-		throw new Error("Cloudflare Access token is missing identity claims");
-	return { email: payload.email, sub: payload.sub };
-}
 
 const mcpHandler = MyMCP.serve("/mcp");
 
