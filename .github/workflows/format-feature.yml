@@ -30,6 +30,7 @@ jobs:
 
       - name: Commit formatted files
         run: |
+          git restore .github/workflows/format-feature.yml
           if git diff --quiet; then
             echo "No formatting changes"
             exit 0
