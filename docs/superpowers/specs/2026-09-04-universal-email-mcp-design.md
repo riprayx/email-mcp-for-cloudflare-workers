@@ -62,7 +62,7 @@ Protocol differences are handled only when backed by a real provider requirement
 
 ### OAuth refresh boundary
 
-The native IMAP/SMTP transports can use a supplied XOAUTH2 access token for any compatible provider, but the existing automatic refresh implementation is Microsoft-specific. Refresh is therefore entered only for accounts explicitly marked as Outlook or legacy accounts using `outlook.office365.com`. Non-Outlook refresh tokens and client IDs are never sent to the Microsoft token endpoint. Provider-specific onboarding and refresh are deferred until each provider has a concrete implementation.
+The native IMAP/SMTP transports can use a supplied XOAUTH2 access token for any compatible provider, but the existing automatic refresh implementation is Microsoft-specific. Refresh is therefore entered only when the actual stored IMAP host is `outlook.office365.com`. The provider label is not trusted for refresh routing because it is metadata and can become stale after explicit server overrides or later edits. Non-Outlook refresh tokens and client IDs are never sent to the Microsoft token endpoint merely because of provider metadata. Provider-specific onboarding and refresh are deferred until each provider has a concrete implementation.
 
 ### Permission modes
 
@@ -86,7 +86,7 @@ New pure logic is test-first and runs without Cloudflare runtime dependencies:
 - server resolution/override behavior
 - custom provider fallback errors
 - NetEase host detection
-- Outlook-only Microsoft OAuth refresh routing
+- host-gated Microsoft OAuth refresh routing
 - account login identity compatibility
 - permission mode parsing and tool filtering
 - SMTP post-DATA failure classification
