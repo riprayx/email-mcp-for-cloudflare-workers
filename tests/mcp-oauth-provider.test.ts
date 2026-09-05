@@ -11,3 +11,8 @@ test("MCP entrypoint is owned by OAuthProvider", async () => {
 	assert.match(source, /clientRegistrationEndpoint:\s*["']\/register["']/);
 	assert.doesNotMatch(source, /accessRejection/);
 });
+
+test("OAuth discovery advertises offline refresh access for ChatGPT", async () => {
+	const source = await readFile(new URL("../src/index.ts", import.meta.url), "utf8");
+	assert.match(source, /scopesSupported:\s*\[\s*["']offline_access["']\s*\]/);
+});
