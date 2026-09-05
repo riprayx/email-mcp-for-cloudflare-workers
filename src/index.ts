@@ -1,23 +1,17 @@
-import { accessRejection } from "./access";
-import { verifyAccessJwt } from "./access-jwt";
-import app from "./app";
-import type { MailEnv } from "./mail/types";
+import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { MyMCP } from "./mcp-agent";
+import { handleAccessRequest, type McpOAuthEnv } from "./oauth/access-handler";
 
 export { MyMCP } from "./mcp-agent";
 
-const mcpHandler = MyMCP.serve("/mcp");
-
-export default {
-	async fetch(request: Request, env: MailEnv, ctx: ExecutionContext): Promise<Response> {
-		const rejection = await accessRejection(request, env, (token) =>
-			verifyAccessJwt(token, env),
-		);
-		if (rejection) return rejection;
-
-		const pathname = new URL(request.url).pathname;
-		return pathname === "/mcp" || pathname.startsWith("/mcp/")
-			? mcpHandler.fetch(request, env, ctx)
-			: app.fetch(request, env, ctx);
-	},
-} satisfies ExportedHandler<MailEnv>;
+export default new OAuthProvider<McpOAuthEnv>({
+	apiRoute: "/mcp",
+	apiHandler: MyMCP.serve("/mcp"),
+	defaultHandler: { fetch: handleAccessRequest },
+	authorizeEndpoint: "/authorize",
+	tokenEndpoint: "/token",
+	clientRegistrationEndpoint: "/register",
+	accessTokenTTL: 15 * 60,
+	refreshTokenTTL: 90 * 24 * 60 * 60,
+	clientRegistrationTTL: 90 * 24 * 60 * 60,
+});
