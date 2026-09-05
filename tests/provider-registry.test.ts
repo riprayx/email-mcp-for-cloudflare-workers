@@ -44,7 +44,7 @@ test("unknown domains do not invent provider settings", () => {
 	assert.equal(detectProvider("user@example.com"), undefined);
 });
 
-test("Microsoft OAuth refresh policy is limited to Outlook accounts", () => {
+test("Microsoft OAuth refresh policy trusts the actual Outlook IMAP host only", () => {
 	assert.equal(typeof usesMicrosoftOAuthRefresh, "function");
 	assert.equal(
 		usesMicrosoftOAuthRefresh?.({ provider: "gmail", imap: { host: "imap.gmail.com" } }),
@@ -52,10 +52,14 @@ test("Microsoft OAuth refresh policy is limited to Outlook accounts", () => {
 	);
 	assert.equal(
 		usesMicrosoftOAuthRefresh?.({ provider: "outlook", imap: { host: "mail.example.com" } }),
-		true,
+		false,
 	);
 	assert.equal(
 		usesMicrosoftOAuthRefresh?.({ imap: { host: "outlook.office365.com" } }),
+		true,
+	);
+	assert.equal(
+		usesMicrosoftOAuthRefresh?.({ provider: "gmail", imap: { host: "OUTLOOK.OFFICE365.COM" } }),
 		true,
 	);
 });
