@@ -29,7 +29,7 @@ export interface McpOAuthEnv extends Cloudflare.Env {
 	ACCESS_TOKEN_URL: string;
 	ACCESS_JWKS_URL: string;
 	COOKIE_ENCRYPTION_KEY: string;
-	MCP_ALLOWED_EMAIL: string;
+	ALLOWED_EMAIL: string;
 }
 
 interface AccessOidcClaims {
@@ -162,7 +162,7 @@ async function handleCallback(request: Request, env: McpOAuthEnv): Promise<Respo
 		code_verifier: codeVerifier,
 	});
 	const claims = await verifyAccessIdToken(upstream.idToken, env);
-	assertApprovedIdentity(claims.email, env.MCP_ALLOWED_EMAIL);
+	assertApprovedIdentity(claims.email, env.ALLOWED_EMAIL);
 
 	const client = await env.OAUTH_PROVIDER.lookupClient(oauthReqInfo.clientId);
 	if (!client) throw new OAuthError("invalid_request", "Unknown OAuth client");
