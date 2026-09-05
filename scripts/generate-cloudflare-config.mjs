@@ -1,23 +1,46 @@
 import { writeFile } from "node:fs/promises";
 
-export const generatedConfigPath = "wrangler.generated.json";
+export const generatedMcpConfigPath = "wrangler.mcp.generated.json";
+export const generatedAdminConfigPath = "wrangler.admin.generated.json";
 
-export function buildCloudflareConfig(environment = process.env) {
-	const kvNamespaceId = environment.EMAIL_KV_NAMESPACE_ID?.trim();
-	if (!kvNamespaceId)
-		throw new Error("EMAIL_KV_NAMESPACE_ID must be configured as a Cloudflare build secret");
-	if (!/^[a-f0-9]{32}$/i.test(kvNamespaceId))
-		throw new Error("EMAIL_KV_NAMESPACE_ID must be a 32-character hexadecimal namespace ID");
+const sharedConfig = {
+	$schema: "node_modules/wrangler/config-schema.json",
+	compatibility_date: "2026-06-14",
+	compatibility_flags: ["nodejs_compat"],
+	keep_vars: true,
+	observability: {
+		enabled: true,
+	},
+};
 
-	return {
-		$schema: "node_modules/wrangler/config-schema.json",
+function namespaceId(environment, name) {
+	const value = environment[name]?.trim();
+	if (!value) throw new Error(`${name} must be configured as a Cloudflare build secret`);
+	if (!/^[a-f0-9]{32}$/i.test(value))
+		throw new Error(`${name} must be a 32-character hexadecimal namespace ID`);
+	return value;
+}
+
+export function buildCloudflareConfigs(environment = process.env) {
+	const emailKvNamespaceId = namespaceId(environment, "EMAIL_KV_NAMESPACE_ID");
+	const oauthKvNamespaceId = namespaceId(environment, "OAUTH_KV_NAMESPACE_ID");
+
+	const mcp = {
+		...sharedConfig,
 		name: "email-mcp-server",
 		main: "src/index.ts",
-		compatibility_date: "2026-06-14",
-		compatibility_flags: ["nodejs_compat"],
-		keep_vars: true,
 		secrets: {
-			required: ["CREDENTIAL_ENCRYPTION_KEY", "OUTLOOK_CLIENT_SECRET"],
+			required: [
+				"CREDENTIAL_ENCRYPTION_KEY",
+				"OUTLOOK_CLIENT_SECRET",
+				"ACCESS_CLIENT_ID",
+				"ACCESS_CLIENT_SECRET",
+				"ACCESS_TOKEN_URL",
+				"ACCESS_AUTHORIZATION_URL",
+				"ACCESS_JWKS_URL",
+				"COOKIE_ENCRYPTION_KEY",
+				"ALLOWED_EMAIL",
+			],
 		},
 		migrations: [
 			{
@@ -34,27 +57,47 @@ export function buildCloudflareConfig(environment = process.env) {
 			],
 		},
 		kv_namespaces: [
-			{
-				binding: "EMAIL_KV",
-				id: kvNamespaceId,
-			},
+			{ binding: "EMAIL_KV", id: emailKvNamespaceId },
+			{ binding: "OAUTH_KV", id: oauthKvNamespaceId },
 		],
-		observability: {
-			enabled: true,
-		},
 	};
+
+	const admin = {
+		...sharedConfig,
+		name: "email-mcp-admin",
+		main: "src/admin.ts",
+		secrets: {
+			required: [
+				"CREDENTIAL_ENCRYPTION_KEY",
+				"OUTLOOK_CLIENT_SECRET",
+				"TEAM_DOMAIN",
+				"POLICY_AUD",
+			],
+		},
+		kv_namespaces: [{ binding: "EMAIL_KV", id: emailKvNamespaceId }],
+	};
+
+	return { mcp, admin };
 }
 
-export async function writeCloudflareConfig(
+export async function writeCloudflareConfigs(
 	environment = process.env,
-	outputPath = generatedConfigPath,
+	paths = {
+		mcpPath: generatedMcpConfigPath,
+		adminPath: generatedAdminConfigPath,
+	},
 ) {
-	const config = buildCloudflareConfig(environment);
-	await writeFile(outputPath, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
-	return outputPath;
+	const configs = buildCloudflareConfigs(environment);
+	await Promise.all([
+		writeFile(paths.mcpPath, `${JSON.stringify(configs.mcp, null, 2)}\n`, { mode: 0o600 }),
+		writeFile(paths.adminPath, `${JSON.stringify(configs.admin, null, 2)}\n`, { mode: 0o600 }),
+	]);
+	return paths;
 }
 
 if (import.meta.url === new URL(process.argv[1], "file:").href) {
-	const outputPath = await writeCloudflareConfig();
-	console.log(`Generated private Cloudflare deployment configuration at ${outputPath}`);
+	const paths = await writeCloudflareConfigs();
+	console.log(
+		`Generated private Cloudflare deployment configurations at ${paths.mcpPath} and ${paths.adminPath}`,
+	);
 }
