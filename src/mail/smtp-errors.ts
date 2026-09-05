@@ -24,3 +24,15 @@ export class SmtpDeliveryUnknownError extends Error {
 export function classifySmtpDataFailure(error: unknown): Error {
 	return error instanceof SmtpResponseError ? error : new SmtpDeliveryUnknownError(error);
 }
+
+export function smtpDataFailureResult(error: unknown, messageId?: string) {
+	const failure = classifySmtpDataFailure(error);
+	if (failure instanceof SmtpResponseError) throw failure;
+	return {
+		messageId,
+		accepted: [] as string[],
+		rejected: [] as string[],
+		deliveryState: "unknown" as const,
+		deliveryWarning: failure.message,
+	};
+}
