@@ -28,6 +28,7 @@ for (const variable of [
 	"TEAM_DOMAIN",
 	"POLICY_AUD",
 	"ACCESS_CLIENT_ID",
+	"ACCESS_CLIENT_SECRET",
 	"ACCESS_TOKEN_URL",
 	"ACCESS_AUTHORIZATION_URL",
 	"ACCESS_JWKS_URL",
@@ -40,21 +41,16 @@ for (const variable of [
 		`generated Worker types must not contain a literal ${variable}`,
 	);
 }
-assert.doesNotMatch(
-	workerTypes,
-	/\bACCESS_CLIENT_SECRET\b/,
-	"generated Worker types must not contain the obsolete Access client secret binding",
-);
 
 assert.match(
 	devVars,
 	/^ACCESS_CLIENT_ID="your-access-for-saas-client-id"$/m,
 	"development vars must keep a placeholder Access client ID",
 );
-assert.doesNotMatch(
+assert.match(
 	devVars,
-	/^ACCESS_CLIENT_SECRET=/m,
-	"development vars must not advertise an Access client secret for the PKCE public client flow",
+	/^ACCESS_CLIENT_SECRET="your-access-for-saas-client-secret"$/m,
+	"development vars must keep a placeholder Access client secret",
 );
 assert.match(
 	devVars,
