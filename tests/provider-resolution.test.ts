@@ -32,6 +32,13 @@ test("explicit custom provider disables domain autodetection", () => {
 	assert.deepEqual(resolved.smtp, { host: "smtp.example.com", port: 1587, secure: false });
 });
 
+test("explicit provider IDs are normalized", () => {
+	assert.equal(
+		resolveAccountSettings({ email: "user@example.com", provider: " GMAIL " }).provider,
+		"gmail",
+	);
+});
+
 test("smtp can be disabled even when provider has a default", () => {
 	assert.equal(resolveAccountSettings({ email: "user@163.com", smtpEnabled: false }).smtp, undefined);
 });
