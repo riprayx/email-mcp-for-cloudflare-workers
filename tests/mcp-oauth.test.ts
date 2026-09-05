@@ -4,10 +4,10 @@ import { assertApprovedIdentity } from "../src/oauth/access-handler.ts";
 
 test("only the configured Access identity can complete MCP authorization", () => {
 	assert.doesNotThrow(() =>
-		assertApprovedIdentity("riprayx@gmail.com", "riprayx@gmail.com"),
+		assertApprovedIdentity("owner@example.com", "owner@example.com"),
 	);
 	assert.throws(
-		() => assertApprovedIdentity("other@example.com", "riprayx@gmail.com"),
+		() => assertApprovedIdentity("other@example.com", "owner@example.com"),
 		/not authorized/i,
 	);
 });
